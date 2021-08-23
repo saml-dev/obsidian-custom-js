@@ -1,112 +1,90 @@
 import { App, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { readFileSync } from 'fs';
 
 interface MyPluginSettings {
-	mySetting: string;
+  jsFiles: string;
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+  jsFiles: '',
 }
 
 export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+  settings: MyPluginSettings;
 
-	async onload() {
-		console.log('loading plugin');
+  async onload() {
+    console.log('loading customjs plugin');
+    await this.loadSettings();
+    console.log(this.settings)
+    await this.loadFunctions();
 
-		await this.loadSettings();
+    this.addSettingTab(new SampleSettingTab(this.app, this));
+  }
 
-		this.addRibbonIcon('dice', 'Sample Plugin', () => {
-			new Notice('This is a notice!');
-		});
+  onunload() {
+    console.log('unloading plugin');
+  }
 
-		this.addStatusBarItem().setText('Status Bar Text');
+  async loadSettings() {
+    const settings = await this.loadData();
+    this.settings = { ...DEFAULT_SETTINGS, ...settings };
+  }
 
-		this.addCommand({
-			id: 'open-sample-modal',
-			name: 'Open Sample Modal',
-			// callback: () => {
-			// 	console.log('Simple Callback');
-			// },
-			checkCallback: (checking: boolean) => {
-				let leaf = this.app.workspace.activeLeaf;
-				if (leaf) {
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-					return true;
-				}
-				return false;
-			}
-		});
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
 
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		this.registerCodeMirror((cm: CodeMirror.Editor) => {
-			console.log('codemirror', cm);
-		});
-
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-	}
-
-	onunload() {
-		console.log('unloading plugin');
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
-}
-
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		let {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		let {contentEl} = this;
-		contentEl.empty();
-	}
+  async loadFunctions() {
+    const files = this.settings.jsFiles.split(',');
+    files.forEach(f => {
+      try {
+        if (f != '' && f.includes('.js')) {
+          // @ts-ignore
+          const path = this.app.vault.adapter.basePath + '/' + f
+          // const imp = require(path)
+          const file = readFileSync(path, 'utf-8')
+          const o = eval(file);
+          // const fn = f.split('/').pop().split('.')[0]
+          Object.keys(o).forEach(key => {
+            // @ts-ignore
+            this[key] = o[key]
+          })
+        }
+      } catch (e) {
+        console.error(`CustomJS couldn\'t import ${f}`)
+        // console.error(e)
+      }
+    })
+  }
 }
 
 class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+  plugin: MyPlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
+  constructor(app: App, plugin: MyPlugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
 
-	display(): void {
-		let {containerEl} = this;
+  display(): void {
+    let { containerEl } = this;
 
-		containerEl.empty();
+    containerEl.empty();
 
-		containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
+    containerEl.createEl('h2', { text: 'CustomJS' });
 
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue('')
-				.onChange(async (value) => {
-					console.log('Secret: ' + value);
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
-	}
+    new Setting(containerEl)
+      .setName('Files to load')
+      .setDesc('Comma-separated list of files to import')
+      .addText(text => text
+        .setPlaceholder('jsfile1.js,jsfile2.js')
+        .setValue(this.plugin.settings.jsFiles)
+        .onChange(async (value) => {
+          console.log(this.app.vault.getFiles())
+          this.plugin.settings.jsFiles = value;
+          await this.plugin.saveSettings();
+          await this.plugin.loadFunctions();
+        })
+      );
+  }
 }
