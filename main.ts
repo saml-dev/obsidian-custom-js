@@ -36,23 +36,18 @@ export default class MyPlugin extends Plugin {
 
   async loadFunctions() {
     const files = this.settings.jsFiles.split(',');
-    files.forEach(f => {
+    files.forEach(async f => {
       try {
         if (f != '' && f.includes('.js')) {
+          const file = await this.app.vault.adapter.read(f)
+          const def = eval(file);
+          const cls = new def()
           // @ts-ignore
-          const path = this.app.vault.adapter.basePath + '/' + f
-          // const imp = require(path)
-          const file = readFileSync(path, 'utf-8')
-          const o = eval(file);
-          // const fn = f.split('/').pop().split('.')[0]
-          Object.keys(o).forEach(key => {
-            // @ts-ignore
-            this[key] = o[key]
-          })
+          this[cls.constructor.name] = cls
         }
       } catch (e) {
         console.error(`CustomJS couldn\'t import ${f}`)
-        // console.error(e)
+        console.error(e)
       }
     })
   }
@@ -80,7 +75,6 @@ class SampleSettingTab extends PluginSettingTab {
         .setPlaceholder('jsfile1.js,jsfile2.js')
         .setValue(this.plugin.settings.jsFiles)
         .onChange(async (value) => {
-          console.log(this.app.vault.getFiles())
           this.plugin.settings.jsFiles = value;
           await this.plugin.saveSettings();
           await this.plugin.loadFunctions();
