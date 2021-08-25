@@ -1,5 +1,4 @@
 import { App, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import { readFileSync } from 'fs';
 
 interface MyPluginSettings {
   jsFiles: string;
@@ -35,7 +34,7 @@ export default class MyPlugin extends Plugin {
   }
 
   async loadFunctions() {
-    const files = this.settings.jsFiles.split(',');
+    const files = this.settings.jsFiles.split(',').map(s => s.trim());
     files.forEach(async f => {
       try {
         if (f != '' && f.includes('.js')) {

@@ -1,7 +1,7 @@
 {
   "name": "customjs",
-  "version": "0.1.0",
-  "description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+  "version": "0.1.1",
+  "description": "This is a plugin for Obsidian (https://obsidian.md) that allows for code reuse when using custom JS.",
   "main": "main.js",
   "scripts": {
     "dev": "rollup --config rollup.config.js -w",
