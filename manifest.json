@@ -1,10 +1,10 @@
 {
   "id": "customjs",
   "name": "CustomJS",
-  "version": "1.0.1",
+  "version": "0.1.2",
   "minAppVersion": "0.9.12",
-  "description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
-  "author": "Obsidian",
-  "authorUrl": "https://obsidian.md/about",
+  "description": "This plugin allows for the loading and reuse of custom JS inside your vault.",
+  "author": "Sam Lewis",
+  "authorUrl": "https://github.com/samlewis0602",
   "isDesktopOnly": false
 }
