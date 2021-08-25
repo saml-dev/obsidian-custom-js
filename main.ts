@@ -40,7 +40,7 @@ export default class MyPlugin extends Plugin {
       try {
         if (f != '' && f.includes('.js')) {
           const file = await this.app.vault.adapter.read(f)
-          const def = eval(file);
+          const def = eval('(' + file + ')')
           const cls = new def()
           // @ts-ignore
           this[cls.constructor.name] = cls
