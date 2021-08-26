@@ -1,7 +1,7 @@
 {
   "name": "customjs",
   "version": "1.0.0",
-  "description": "This is a plugin for Obsidian (https://obsidian.md) that allows for code reuse when using custom JS.",
+  "description": "This is a plugin for Obsidian (https://obsidian.md) that enables custom javascript across mobile and desktop.",
   "main": "main.js",
   "scripts": {
     "dev": "rollup --config rollup.config.js -w",
