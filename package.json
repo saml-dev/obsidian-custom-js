@@ -1,6 +1,6 @@
 {
   "name": "customjs",
-  "version": "0.1.2",
+  "version": "1.0.0",
   "description": "This is a plugin for Obsidian (https://obsidian.md) that allows for code reuse when using custom JS.",
   "main": "main.js",
   "scripts": {
@@ -8,7 +8,7 @@
     "build": "rollup --config rollup.config.js --environment BUILD:production"
   },
   "keywords": [],
-  "author": "",
+  "author": "Sam Lewis",
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^18.0.0",
@@ -17,6 +17,7 @@
     "@types/node": "^14.14.37",
     "obsidian": "^0.12.0",
     "rollup": "^2.32.1",
+    "rollup-plugin-copy": "^3.4.0",
     "tslib": "^2.2.0",
     "typescript": "^4.2.4"
   }

@@ -1,57 +1,162 @@
-## Obsidian Sample Plugin
+# CustomJS
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+CustomJS is a plugin for Obsidian that allows users to write custom Javascript that you can call anywhere you have access to the `app` object — including `dataviewjs` blocks and templater templates.
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
+✅ Works on desktop and mobile!
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+## Installation
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Changes the default font color to red using `styles.css`.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+#### Recommended
+CustomJS is available in the Obsidian community plugin browser.
 
-### First time developing plugins?
+#### Manual
+Go to the [releases](https://github.com/samlewis0602/obsidian-custom-js/releases) and download the latest `main.js` and `manifest.json` files. Create a folder called `customjs` inside `.obsidian/plugins` and place both files in it.
 
-Quick starting guide for new plugin devs:
+## Usage
 
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+CustomJS works by writing javascript classes. Each file can only contain one class.
 
-### Releasing new releases
+````
+// in vault at scripts/coolString.js
+class CoolString {
+    coolify(s) {
+        return `😎 ${s} 😎`
+    }
+}
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments.
-- Publish the release.
 
-### Adding your plugin to the community plugin list
+// dataviewjs block in *.md
+```dataviewjs
+const {CoolString} = app.plugins.plugins.customjs
+dv.list(dv.pages().file.name.map(n => CoolString.coolify(n)))
+```
+````
 
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+With these files set up, make sure you add `scripts/coolString.js` to the settings page for CustomJS and voila! When entering preview mode for the dataviewjs block you should see a list of all your files with a little extra 😎
 
-### How to use
+## Advanced example
+You can pass anything as parameters to your functions to allow for some incredible code reuse. A dataview example that I use to manage tasks:
 
-- Clone this repo.
-- `npm i` or `yarn` to install dependencies
-- `npm run dev` to start compilation in watch mode.
+#### Daily note
+````
+```dataviewjs
+const {DvTasks} = app.plugins.plugins.customjs
+DvTasks.getOverdueTasks({app, dv, luxon, that:this, date:'2021-08-25'})
+```
 
-### Manually installing the plugin
+```dataviewjs
+const {DvTasks} = app.plugins.plugins.customjs
+DvTasks.getTasksNoDueDate({app, dv, luxon, that:this})
+```
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+### Today's Tasks
+```dataviewjs
+const {DvTasks} = app.plugins.plugins.customjs
+DvTasks.getTodayTasks({app, dv, luxon, that:this, date:'2021-08-25'}) 
+```
+### Daily Journal
+````
 
-### API Documentation
+#### scripts/dvTasks.js
+```
+class DvTasks {
+  relDateString(d, luxon) {
+    if (!(d instanceof luxon.DateTime)) return '–'
+    const now = luxon.DateTime.now()
+    const days = Math.ceil(d.diff(now, 'days').days)
+    if (days < 0) return 'Overdue ' + d.toFormat('L/d')
+    if (days === 0) return 'Today'
+    if (days === 1) return 'Tomorrow'
+    if (days < 7) return d.toFormat('cccc')
+    return d.toFormat('ccc L/d')
+  }
 
-See https://github.com/obsidianmd/obsidian-api
+  getButtonStrings(status) {
+    const completed = status === 'Completed'
+    const btnStr = completed ? 'Undo' : 'Done'
+    const updateStr = completed ? 'To-Do' : 'Completed'
+    return { btnStr, updateStr }
+  }
+
+  getCustomLink(name, target) {
+    return `[[${target}|${name}]]`
+  }
+
+  getTodayTasks(args) {
+    const { luxon, dv, date, that } = args
+    const finalDate = date ?? dv.current().file.name
+    return this.getTasksTable({
+      ...args,
+      filterFn: t => t.status != 'Completed' && t.dueDate && t.dueDate?.hasSame(luxon.DateTime.fromISO(finalDate), 'day')
+    })
+  }
+
+  getOverdueTasks(args) {
+    const { luxon, dv, date, that } = args
+    const finalDate = date ?? dv.current().file.name
+    return this.getTasksTable({
+      ...args,
+      prependText: 'Overdue',
+      filterFn: t => t.dueDate && t.dueDate < luxon.DateTime.fromISO(finalDate) && t.status != 'Completed'
+    })
+  }
+
+  getTasksNoDueDate(args) {
+    return this.getTasksTable({
+      ...args,
+      prependText: 'No Due Date',
+      filterFn: t => !t.dueDate
+    })
+  }
+
+  getTasksTable(args) {
+    const {
+      that,
+      app,
+      dv,
+      luxon,
+      getSortProp = t => t.dueDate,
+      sortOrder = 'asc',
+      filterFn = t => t.task,
+      completedCol = false,
+      prependHeaderLevel = 3,
+      prependText
+    } = args;
+    const { metaedit, buttons } = app.plugins.plugins
+    const { update } = metaedit.api
+    const { createButton } = buttons
+
+
+    const dueStr = completedCol ? 'Completed' : 'Due Date';
+    const pages = dv.pages("#task").sort(getSortProp, sortOrder).where(filterFn)
+    if (pages.length === 0) {
+      // console.log('Empty dataview:', args)
+      return
+    }
+
+    if (prependText) {
+      dv.header(prependHeaderLevel, prependText)
+    }
+
+    dv.table(["Name", "Category", dueStr, "", ""], pages
+      .map(t => {
+        const { btnStr, updateStr } = this.getButtonStrings(t.status)
+        return [
+          this.getCustomLink(t.task, t.file.name),
+          t.category,
+          this.relDateString(t.dueDate, luxon),
+          createButton({
+            app,
+            el: that.container,
+            args: { name: btnStr },
+            clickOverride: { click: update, params: ['Status', updateStr, t.file.path] }
+          }),
+        ]
+      })
+    )
+  }
+}
+```
+
+#### Result
+![Result](images/dvTasksExample.png)

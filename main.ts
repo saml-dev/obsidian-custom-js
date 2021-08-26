@@ -14,14 +14,13 @@ export default class MyPlugin extends Plugin {
   async onload() {
     console.log('loading customjs plugin');
     await this.loadSettings();
-    console.log(this.settings)
     await this.loadFunctions();
 
     this.addSettingTab(new SampleSettingTab(this.app, this));
   }
 
   onunload() {
-    console.log('unloading plugin');
+    // console.log('unloading plugin');
   }
 
   async loadSettings() {
@@ -62,9 +61,7 @@ class SampleSettingTab extends PluginSettingTab {
 
   display(): void {
     let { containerEl } = this;
-
     containerEl.empty();
-
     containerEl.createEl('h2', { text: 'CustomJS' });
 
     new Setting(containerEl)
