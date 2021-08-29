@@ -1,4 +1,4 @@
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, TAbstractFile } from 'obsidian';
 
 interface MyPluginSettings {
   jsFiles: string;
@@ -12,15 +12,22 @@ export default class MyPlugin extends Plugin {
   settings: MyPluginSettings;
 
   async onload() {
-    console.log('loading customjs plugin');
+    console.log('loading customJS plugin');
     await this.loadSettings();
-    await this.loadFunctions();
-
+    await this.loadClasses();
+    this.app.vault.on('modify', this.reloadIfNeeded, this)
     this.addSettingTab(new SampleSettingTab(this.app, this));
   }
 
   onunload() {
-    // console.log('unloading plugin');
+    // @ts-ignore
+    delete window.customJS;
+  }
+
+  async reloadIfNeeded(f: TAbstractFile) {
+    if (this.settings.jsFiles.includes(f.path)) {
+      this.loadClasses()
+    }
   }
 
   async loadSettings() {
@@ -32,7 +39,8 @@ export default class MyPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
-  async loadFunctions() {
+  async loadClasses() {
+    const customjs = {}
     const files = this.settings.jsFiles.split(',').map(s => s.trim());
     files.forEach(async f => {
       try {
@@ -41,13 +49,15 @@ export default class MyPlugin extends Plugin {
           const def = eval('(' + file + ')')
           const cls = new def()
           // @ts-ignore
-          this[cls.constructor.name] = cls
+          customjs[cls.constructor.name] = cls
         }
       } catch (e) {
         console.error(`CustomJS couldn\'t import ${f}`)
         console.error(e)
       }
     })
+    // @ts-ignore
+    window.customJS = customjs;
   }
 }
 
@@ -73,7 +83,7 @@ class SampleSettingTab extends PluginSettingTab {
         .onChange(async (value) => {
           this.plugin.settings.jsFiles = value;
           await this.plugin.saveSettings();
-          await this.plugin.loadFunctions();
+          await this.plugin.loadClasses();
         })
       );
   }

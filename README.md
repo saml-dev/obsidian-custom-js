@@ -1,6 +1,6 @@
 # CustomJS
 
-CustomJS is a plugin for Obsidian that allows users to write custom Javascript that you can call anywhere you have access to the `app` object — including `dataviewjs` blocks and templater templates.
+CustomJS is a plugin for Obsidian that allows users to write custom Javascript that you can call anywhere you can write JS — including `dataviewjs` blocks and templater templates.
 
 ✅ Works on desktop and mobile!
 
@@ -12,7 +12,7 @@ CustomJS is available in the Obsidian community plugin browser.
 #### Manual
 Go to the [releases](https://github.com/samlewis0602/obsidian-custom-js/releases) and download the latest `main.js` and `manifest.json` files. Create a folder called `customjs` inside `.obsidian/plugins` and place both files in it.
 
-## Usage
+## Usage/Example
 
 CustomJS works by writing javascript classes. Each file can only contain one class.
 
@@ -27,7 +27,7 @@ class CoolString {
 
 // dataviewjs block in *.md
 ```dataviewjs
-const {CoolString} = app.plugins.plugins.customjs
+const {CoolString} = customJS
 dv.list(dv.pages().file.name.map(n => CoolString.coolify(n)))
 ```
 ````
@@ -40,18 +40,18 @@ You can pass anything as parameters to your functions to allow for some incredib
 #### Daily note
 ````
 ```dataviewjs
-const {DvTasks} = app.plugins.plugins.customjs
+const {DvTasks} = customJS
 DvTasks.getOverdueTasks({app, dv, luxon, that:this, date:'2021-08-25'})
 ```
 
 ```dataviewjs
-const {DvTasks} = app.plugins.plugins.customjs
+const {DvTasks} = customJS
 DvTasks.getTasksNoDueDate({app, dv, luxon, that:this})
 ```
 
 ### Today's Tasks
 ```dataviewjs
-const {DvTasks} = app.plugins.plugins.customjs
+const {DvTasks} = customJS
 DvTasks.getTodayTasks({app, dv, luxon, that:this, date:'2021-08-25'}) 
 ```
 ### Daily Journal
