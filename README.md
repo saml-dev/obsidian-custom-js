@@ -160,3 +160,8 @@ class DvTasks {
 
 #### Result
 ![Result](images/dvTasksExample.png)
+
+## ☕️ Support
+Do you find CustomJS useful? Consider buying me a coffee to fuel updates and more useful software like this. Thank you!
+
+<a href="https://www.buymeacoffee.com/samlewis" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
