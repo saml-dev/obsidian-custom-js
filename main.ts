@@ -12,10 +12,10 @@ export default class MyPlugin extends Plugin {
   settings: MyPluginSettings;
 
   async onload() {
-    console.log('loading customJS plugin');
+    console.log('Loading CustomJS');
     await this.loadSettings();
     await this.loadClasses();
-    this.app.vault.on('modify', this.reloadIfNeeded, this)
+    this.registerEvent(this.app.vault.on('modify', this.reloadIfNeeded, this))
     this.addSettingTab(new SampleSettingTab(this.app, this));
   }
 
