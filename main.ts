@@ -1,22 +1,22 @@
 import { App, Plugin, PluginSettingTab, Setting, TAbstractFile } from 'obsidian';
 
-interface MyPluginSettings {
+interface CustomJSSettings {
   jsFiles: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
+const DEFAULT_SETTINGS: CustomJSSettings = {
   jsFiles: '',
 }
 
-export default class MyPlugin extends Plugin {
-  settings: MyPluginSettings;
+export default class CustomJS extends Plugin {
+  settings: CustomJSSettings;
 
   async onload() {
     console.log('Loading CustomJS');
     await this.loadSettings();
-    await this.loadClasses();
+    this.loadClasses();
     this.registerEvent(this.app.vault.on('modify', this.reloadIfNeeded, this))
-    this.addSettingTab(new SampleSettingTab(this.app, this));
+    this.addSettingTab(new CustomJSSettingsTab(this.app, this));
   }
 
   onunload() {
@@ -42,7 +42,7 @@ export default class MyPlugin extends Plugin {
   async loadClasses() {
     const customjs = {}
     const files = this.settings.jsFiles.split(',').map(s => s.trim());
-    files.forEach(async f => {
+    for (const f of files) {
       try {
         if (f != '' && f.includes('.js')) {
           const file = await this.app.vault.adapter.read(f)
@@ -55,16 +55,16 @@ export default class MyPlugin extends Plugin {
         console.error(`CustomJS couldn\'t import ${f}`)
         console.error(e)
       }
-    })
+    }
     // @ts-ignore
     window.customJS = customjs;
   }
 }
 
-class SampleSettingTab extends PluginSettingTab {
-  plugin: MyPlugin;
+class CustomJSSettingsTab extends PluginSettingTab {
+  plugin: CustomJS;
 
-  constructor(app: App, plugin: MyPlugin) {
+  constructor(app: App, plugin: CustomJS) {
     super(app, plugin);
     this.plugin = plugin;
   }
