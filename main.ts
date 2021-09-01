@@ -44,7 +44,7 @@ export default class CustomJS extends Plugin {
     const files = this.settings.jsFiles.split(',').map(s => s.trim());
     for (const f of files) {
       try {
-        if (f != '' && f.includes('.js')) {
+        if (f != '' && f.endsWith('.js')) {
           const file = await this.app.vault.adapter.read(f)
           const def = eval('(' + file + ')')
           const cls = new def()
