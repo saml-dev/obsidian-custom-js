@@ -2,10 +2,12 @@ import { App, Plugin, PluginSettingTab, Setting, TAbstractFile } from 'obsidian'
 
 interface CustomJSSettings {
   jsFiles: string;
+  jsFolder: string;
 }
 
 const DEFAULT_SETTINGS: CustomJSSettings = {
   jsFiles: '',
+  jsFolder: '',
 }
 
 export default class CustomJS extends Plugin {
@@ -14,8 +16,11 @@ export default class CustomJS extends Plugin {
   async onload() {
     console.log('Loading CustomJS');
     await this.loadSettings();
-    this.loadClasses();
+    // this.loadClasses();
     this.registerEvent(this.app.vault.on('modify', this.reloadIfNeeded, this))
+    this.app.workspace.onLayoutReady(() => {
+      this.loadClasses();
+    })
     this.addSettingTab(new CustomJSSettingsTab(this.app, this));
   }
 
@@ -39,23 +44,43 @@ export default class CustomJS extends Plugin {
     await this.saveData(this.settings);
   }
 
+  async evalFile(f: string, customjs: any): Promise<void> {
+    try {
+      const file = await this.app.vault.adapter.read(f)
+      const def = eval('(' + file + ')')
+      const cls = new def()
+      customjs[cls.constructor.name] = cls
+    } catch (e) {
+      console.error(`CustomJS couldn\'t import ${f}`)
+      console.error(e)
+    }
+  }
+
   async loadClasses() {
     const customjs = {}
-    const files = this.settings.jsFiles.split(',').map(s => s.trim());
-    for (const f of files) {
-      try {
+
+    // Load individual files
+    if (this.settings.jsFiles != '') {
+      const individualFiles = this.settings.jsFiles.split(',').map(s => s.trim());
+      for (const f of individualFiles) {
         if (f != '' && f.endsWith('.js')) {
-          const file = await this.app.vault.adapter.read(f)
-          const def = eval('(' + file + ')')
-          const cls = new def()
-          // @ts-ignore
-          customjs[cls.constructor.name] = cls
+          await this.evalFile(f, customjs);
         }
-      } catch (e) {
-        console.error(`CustomJS couldn\'t import ${f}`)
-        console.error(e)
       }
     }
+
+    // load scripts in folder
+    if (this.settings.jsFolder != '') {
+      const prefix = this.settings.jsFolder;
+      const files = this.app.vault.getFiles();
+      const filesToLoad = files.filter(f => f.path.startsWith(prefix) && f.path.endsWith('.js'));
+      for (const f of filesToLoad) {
+        if (f.path != '' && f.path.endsWith('.js')) {
+          await this.evalFile(f.path, customjs);
+        }
+      }
+    }
+
     // @ts-ignore
     window.customJS = customjs;
   }
@@ -74,14 +99,29 @@ class CustomJSSettingsTab extends PluginSettingTab {
     containerEl.empty();
     containerEl.createEl('h2', { text: 'CustomJS' });
 
+    // individual files
     new Setting(containerEl)
-      .setName('Files to load')
-      .setDesc('Comma-separated list of files to import')
+      .setName('Individual files')
+      .setDesc('Comma-separated list of files to load')
       .addText(text => text
         .setPlaceholder('jsfile1.js,jsfile2.js')
         .setValue(this.plugin.settings.jsFiles)
         .onChange(async (value) => {
           this.plugin.settings.jsFiles = value;
+          await this.plugin.saveSettings();
+          await this.plugin.loadClasses();
+        })
+      );
+
+    // folder
+    new Setting(containerEl)
+      .setName('Folder')
+      .setDesc('Path to folder containing JS files to load')
+      .addText(text => text
+        .setPlaceholder('js/scripts')
+        .setValue(this.plugin.settings.jsFolder)
+        .onChange(async (value) => {
+          this.plugin.settings.jsFolder = value;
           await this.plugin.saveSettings();
           await this.plugin.loadClasses();
         })

@@ -12,6 +12,15 @@ CustomJS is available in the Obsidian community plugin browser.
 #### Manual
 Go to the [releases](https://github.com/samlewis0602/obsidian-custom-js/releases) and download the latest `main.js` and `manifest.json` files. Create a folder called `customjs` inside `.obsidian/plugins` and place both files in it.
 
+## Settings
+Tell CustomJS what code to load.
+
+**Individual files**: A comma-separated list of files you'd like to load.
+
+**Folder**: Path to a folder that contains JS files you'd like to load.
+
+*Note: the folder setting will load all `*.js` files in that folder **recursively**. So settings `scripts` will load `scripts/a.js` and `scripts/other/b.js`*
+
 ## Usage/Example
 
 CustomJS works by writing javascript classes. Each file can only contain one class.
@@ -32,7 +41,7 @@ dv.list(dv.pages().file.name.map(n => CoolString.coolify(n)))
 ```
 ````
 
-With these files set up, make sure you add `scripts/coolString.js` to the settings page for CustomJS and voila! When entering preview mode for the dataviewjs block you should see a list of all your files with a little extra 😎
+Make sure you add `scripts/coolString.js` to the settings page for CustomJS and voila! When entering preview mode for the dataviewjs block you should see a list of all your files with a little extra 😎
 
 ## Advanced example
 You can pass anything as parameters to your functions to allow for some incredible code reuse. A dataview example that I use to manage tasks:
