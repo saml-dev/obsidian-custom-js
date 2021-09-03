@@ -19,7 +19,7 @@ Tell CustomJS what code to load.
 
 **Folder**: Path to a folder that contains JS files you'd like to load.
 
-*Note: the folder setting will load all `*.js` files in that folder **recursively**. So settings `scripts` will load `scripts/a.js` and `scripts/other/b.js`*
+*Note: the folder setting will load all `*.js` files in that folder **recursively**. So setting `scripts` will load `scripts/a.js` and `scripts/other/b.js`*
 
 ## Usage/Example
 
