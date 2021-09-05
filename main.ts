@@ -30,7 +30,7 @@ export default class CustomJS extends Plugin {
   }
 
   async reloadIfNeeded(f: TAbstractFile) {
-    if (this.settings.jsFiles.includes(f.path)) {
+    if (f.path.endsWith('.js')) {
       this.loadClasses()
     }
   }
