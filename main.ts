@@ -61,7 +61,7 @@ export default class CustomJS extends Plugin {
 
     // Load individual files
     if (this.settings.jsFiles != '') {
-      const individualFiles = this.settings.jsFiles.split(',').map(s => s.trim());
+      const individualFiles = this.settings.jsFiles.split(',').map(s => s.trim()).sort();
       for (const f of individualFiles) {
         if (f != '' && f.endsWith('.js')) {
           await this.evalFile(f, customjs);
@@ -73,7 +73,8 @@ export default class CustomJS extends Plugin {
     if (this.settings.jsFolder != '') {
       const prefix = this.settings.jsFolder;
       const files = this.app.vault.getFiles();
-      const filesToLoad = files.filter(f => f.path.startsWith(prefix) && f.path.endsWith('.js'));
+      const filesToLoad = files.filter(f => f.path.startsWith(prefix) && f.path.endsWith('.js'))
+        .sort((a, b) => a.path.localeCompare(b.path));
       for (const f of filesToLoad) {
         if (f.path != '' && f.path.endsWith('.js')) {
           await this.evalFile(f.path, customjs);
