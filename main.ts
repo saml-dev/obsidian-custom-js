@@ -16,7 +16,6 @@ export default class CustomJS extends Plugin {
   async onload() {
     console.log('Loading CustomJS');
     await this.loadSettings();
-    // this.loadClasses();
     this.registerEvent(this.app.vault.on('modify', this.reloadIfNeeded, this))
     this.app.workspace.onLayoutReady(() => {
       this.loadClasses();
@@ -31,7 +30,21 @@ export default class CustomJS extends Plugin {
 
   async reloadIfNeeded(f: TAbstractFile) {
     if (f.path.endsWith('.js')) {
-      this.loadClasses()
+      await this.loadClasses();
+
+      // reload dataviewjs blocks if needed
+      if (this.app.plugins.enabledPlugins.has("dataview")) {
+        const api = this.app.plugins.plugins.dataview?.api;
+        console.log(api.index.touch())
+        return;
+        // if (api) doSomethingWith(api);
+        // else
+        //   this.registerEvent(
+        //     this.app.metadataCache.on("dataview:api-ready", (api) =>
+        //       doSomethingWith(api)
+        //     )
+        //   );
+      }
     }
   }
 
