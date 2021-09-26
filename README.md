@@ -21,6 +21,8 @@ Tell CustomJS what code to load.
 
 *Note: the folder setting will load all `*.js` files in that folder **recursively**. So setting `scripts` will load `scripts/a.js` and `scripts/other/b.js`*
 
+⚠️ Files are loaded in alphabetical order for consistency, enabling dependencies on each other.
+
 ## Usage/Example
 
 CustomJS works by writing javascript classes. Each file can only contain one class.
