@@ -58,31 +58,48 @@ export default class CustomJS extends Plugin {
 
   async loadClasses() {
     const customjs = {}
+    const filesToLoad = [];
 
-    // Load individual files
+    // Get individual paths
     if (this.settings.jsFiles != '') {
-      const individualFiles = this.settings.jsFiles.split(',').map(s => s.trim());
+      const individualFiles = this.settings.jsFiles.split(',').map(s => s.trim()).sort();
       for (const f of individualFiles) {
         if (f != '' && f.endsWith('.js')) {
-          await this.evalFile(f, customjs);
+          filesToLoad.push(f)
         }
       }
     }
 
-    // load scripts in folder
+    // Get paths in folder
     if (this.settings.jsFolder != '') {
       const prefix = this.settings.jsFolder;
       const files = this.app.vault.getFiles();
-      const filesToLoad = files.filter(f => f.path.startsWith(prefix) && f.path.endsWith('.js'));
-      for (const f of filesToLoad) {
-        if (f.path != '' && f.path.endsWith('.js')) {
-          await this.evalFile(f.path, customjs);
+      const scripts = files.filter(f => f.path.startsWith(prefix) && f.path.endsWith('.js'));
+
+      for (const s of scripts) {
+        if (s.path != '' && s.path.endsWith('.js')) {
+          filesToLoad.push(s.path);
         }
+      }
+
+      this.sortByFileName(filesToLoad);
+
+      // load all scripts
+      for (const f of filesToLoad) {
+        await this.evalFile(f, customjs);
       }
     }
 
     // @ts-ignore
     window.customJS = customjs;
+  }
+
+  sortByFileName(files: string[]) {
+    files.sort((a, b) => {
+      const nameA = a.split('/').last()
+      const nameB = b.split('/').last()
+      return nameA.localeCompare(nameB);
+    })
   }
 }
 
