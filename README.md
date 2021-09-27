@@ -17,11 +17,9 @@ Tell CustomJS what code to load.
 
 **Individual files**: A comma-separated list of files you'd like to load.
 
-**Folder**: Path to a folder that contains JS files you'd like to load.
+**Folder**: Path to a folder that contains JS files you'd like to load. The folder setting will load all `*.js` files in that folder **recursively**. So setting `scripts` will load `scripts/a.js` and `scripts/other/b.js`.
 
-*Note: the folder setting will load all `*.js` files in that folder **recursively**. So setting `scripts` will load `scripts/a.js` and `scripts/other/b.js`*
-
-⚠️ Files are loaded in alphabetical order for consistency, enabling dependencies on each other.
+⚠️ Files are loaded in alphabetical order by ***file name*** for consistency, enabling dependencies on each other.
 
 ## Usage/Example
 
