@@ -1,4 +1,6 @@
 import { App, Plugin, PluginSettingTab, Setting, TAbstractFile } from 'obsidian';
+// @ts-ignore
+import compareVersions from 'compare-versions';
 
 interface CustomJSSettings {
   jsFiles: string;
@@ -16,7 +18,6 @@ export default class CustomJS extends Plugin {
   async onload() {
     console.log('Loading CustomJS');
     await this.loadSettings();
-    // this.loadClasses();
     this.registerEvent(this.app.vault.on('modify', this.reloadIfNeeded, this))
     this.app.workspace.onLayoutReady(() => {
       this.loadClasses();
@@ -31,7 +32,16 @@ export default class CustomJS extends Plugin {
 
   async reloadIfNeeded(f: TAbstractFile) {
     if (f.path.endsWith('.js')) {
-      this.loadClasses()
+      await this.loadClasses();
+
+      // reload dataviewjs blocks if installed & version >= 0.4.11
+      if (this.app.plugins.enabledPlugins.has("dataview")) {
+        // @ts-ignore
+        const version = this.app.plugins.plugins?.dataview?.manifest.version;
+        if (compareVersions(version, '0.4.11') < 0) return;
+
+        this.app.plugins.plugins.dataview?.api?.index?.touch();
+      }
     }
   }
 

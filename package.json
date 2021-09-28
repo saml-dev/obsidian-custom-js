@@ -16,9 +16,13 @@
     "@rollup/plugin-typescript": "^8.2.1",
     "@types/node": "^14.14.37",
     "obsidian": "^0.12.0",
+    "obsidian-dataview": "^0.4.11",
     "rollup": "^2.32.1",
     "rollup-plugin-copy": "^3.4.0",
     "tslib": "^2.2.0",
     "typescript": "^4.2.4"
+  },
+  "dependencies": {
+    "compare-versions": "^3.6.0"
   }
 }
