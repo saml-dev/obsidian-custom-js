@@ -34,16 +34,8 @@ export default class CustomJS extends Plugin {
 
       // reload dataviewjs blocks if needed
       if (this.app.plugins.enabledPlugins.has("dataview")) {
-        const api = this.app.plugins.plugins.dataview?.api;
-        console.log(api.index.touch())
-        return;
-        // if (api) doSomethingWith(api);
-        // else
-        //   this.registerEvent(
-        //     this.app.metadataCache.on("dataview:api-ready", (api) =>
-        //       doSomethingWith(api)
-        //     )
-        //   );
+        console.log(this.app.plugins.plugins.dataview.api)
+        this.app.plugins.plugins.dataview?.api?.index?.touch();
       }
     }
   }
