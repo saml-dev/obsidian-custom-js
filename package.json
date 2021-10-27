@@ -1,6 +1,6 @@
 {
   "name": "customjs",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "This is a plugin for Obsidian (https://obsidian.md) that enables custom javascript across mobile and desktop.",
   "main": "main.js",
   "scripts": {
