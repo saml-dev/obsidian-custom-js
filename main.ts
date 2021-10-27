@@ -91,13 +91,13 @@ export default class CustomJS extends Plugin {
           filesToLoad.push(s.path);
         }
       }
+    }
 
-      this.sortByFileName(filesToLoad);
+    this.sortByFileName(filesToLoad);
 
-      // load all scripts
-      for (const f of filesToLoad) {
-        await this.evalFile(f, customjs);
-      }
+    // load all scripts
+    for (const f of filesToLoad) {
+      await this.evalFile(f, customjs);
     }
 
     // @ts-ignore
