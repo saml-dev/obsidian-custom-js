@@ -1,4 +1,10 @@
-import { App, Plugin, PluginSettingTab, Setting, TAbstractFile } from 'obsidian';
+import {
+  App,
+  Plugin,
+  PluginSettingTab,
+  Setting,
+  TAbstractFile,
+} from 'obsidian';
 // @ts-ignore
 import compareVersions from 'compare-versions';
 
@@ -10,7 +16,7 @@ interface CustomJSSettings {
 const DEFAULT_SETTINGS: CustomJSSettings = {
   jsFiles: '',
   jsFolder: '',
-}
+};
 
 export default class CustomJS extends Plugin {
   settings: CustomJSSettings;
@@ -18,10 +24,10 @@ export default class CustomJS extends Plugin {
   async onload() {
     console.log('Loading CustomJS');
     await this.loadSettings();
-    this.registerEvent(this.app.vault.on('modify', this.reloadIfNeeded, this))
+    this.registerEvent(this.app.vault.on('modify', this.reloadIfNeeded, this));
     this.app.workspace.onLayoutReady(() => {
       this.loadClasses();
-    })
+    });
     this.addSettingTab(new CustomJSSettingsTab(this.app, this));
   }
 
@@ -35,7 +41,7 @@ export default class CustomJS extends Plugin {
       await this.loadClasses();
 
       // reload dataviewjs blocks if installed & version >= 0.4.11
-      if (this.app.plugins.enabledPlugins.has("dataview")) {
+      if (this.app.plugins.enabledPlugins.has('dataview')) {
         // @ts-ignore
         const version = this.app.plugins.plugins?.dataview?.manifest.version;
         if (compareVersions(version, '0.4.11') < 0) return;
@@ -56,26 +62,30 @@ export default class CustomJS extends Plugin {
 
   async evalFile(f: string, customjs: any): Promise<void> {
     try {
-      const file = await this.app.vault.adapter.read(f)
-      const def = eval('(' + file + ')')
-      const cls = new def()
-      customjs[cls.constructor.name] = cls
+      const file = await this.app.vault.adapter.read(f);
+      const fixedCode = replaceVarClass(file);
+      const def = eval('(' + fixedCode + ')');
+      const cls = new def();
+      customjs[cls.constructor.name] = cls;
     } catch (e) {
-      console.error(`CustomJS couldn\'t import ${f}`)
-      console.error(e)
+      console.error(`CustomJS couldn\'t import ${f}`);
+      console.error(e);
     }
   }
 
   async loadClasses() {
-    const customjs = {}
+    const customjs = {};
     const filesToLoad = [];
 
     // Get individual paths
     if (this.settings.jsFiles != '') {
-      const individualFiles = this.settings.jsFiles.split(',').map(s => s.trim()).sort();
+      const individualFiles = this.settings.jsFiles
+        .split(',')
+        .map((s) => s.trim())
+        .sort();
       for (const f of individualFiles) {
         if (f != '' && f.endsWith('.js')) {
-          filesToLoad.push(f)
+          filesToLoad.push(f);
         }
       }
     }
@@ -84,7 +94,9 @@ export default class CustomJS extends Plugin {
     if (this.settings.jsFolder != '') {
       const prefix = this.settings.jsFolder;
       const files = this.app.vault.getFiles();
-      const scripts = files.filter(f => f.path.startsWith(prefix) && f.path.endsWith('.js'));
+      const scripts = files.filter(
+        (f) => f.path.startsWith(prefix) && f.path.endsWith('.js')
+      );
 
       for (const s of scripts) {
         if (s.path != '' && s.path.endsWith('.js')) {
@@ -106,10 +118,10 @@ export default class CustomJS extends Plugin {
 
   sortByFileName(files: string[]) {
     files.sort((a, b) => {
-      const nameA = a.split('/').last()
-      const nameB = b.split('/').last()
+      const nameA = a.split('/').last();
+      const nameB = b.split('/').last();
       return nameA.localeCompare(nameB);
-    })
+    });
   }
 }
 
@@ -130,28 +142,68 @@ class CustomJSSettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Individual files')
       .setDesc('Comma-separated list of files to load')
-      .addText(text => text
-        .setPlaceholder('jsfile1.js,jsfile2.js')
-        .setValue(this.plugin.settings.jsFiles)
-        .onChange(async (value) => {
-          this.plugin.settings.jsFiles = value;
-          await this.plugin.saveSettings();
-          await this.plugin.loadClasses();
-        })
+      .addText((text) =>
+        text
+          .setPlaceholder('jsfile1.js,jsfile2.js')
+          .setValue(this.plugin.settings.jsFiles)
+          .onChange(async (value) => {
+            this.plugin.settings.jsFiles = value;
+            await this.plugin.saveSettings();
+            await this.plugin.loadClasses();
+          })
       );
 
     // folder
     new Setting(containerEl)
       .setName('Folder')
       .setDesc('Path to folder containing JS files to load')
-      .addText(text => text
-        .setPlaceholder('js/scripts')
-        .setValue(this.plugin.settings.jsFolder)
-        .onChange(async (value) => {
-          this.plugin.settings.jsFolder = value;
-          await this.plugin.saveSettings();
-          await this.plugin.loadClasses();
-        })
+      .addText((text) =>
+        text
+          .setPlaceholder('js/scripts')
+          .setValue(this.plugin.settings.jsFolder)
+          .onChange(async (value) => {
+            this.plugin.settings.jsFolder = value;
+            await this.plugin.saveSettings();
+            await this.plugin.loadClasses();
+          })
       );
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/*                                    UTILS                                   */
+/* -------------------------------------------------------------------------- */
+/**
+ * Replaces the var keyword with the class keyword
+ * @description Fixes var eval bug, before eval gets to the code
+ * @param input
+ * @returns
+ */
+const replaceVarClass = (input: string): string => {
+  if (!input.match('var')) return input;
+
+  console.log(`⭐  working on`, input);
+
+  const className = (() => {
+    // get line from input that contains the string var
+    const varLine = input
+      .split('\n')
+      .find((line) => line.match('var'))
+      .trim(); // trim is REQUIRED
+
+    // split line into array of words
+    const splitted = varLine.split(' ');
+
+    // get the second word from the array
+    const solution = splitted[1];
+
+    // return the second word
+    return solution;
+  })();
+
+  let fixedClass: string = input.replace(
+    `var ${className} = class`,
+    `class ${className}`
+  );
+  return fixedClass;
+};
