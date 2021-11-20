@@ -182,8 +182,6 @@ class CustomJSSettingsTab extends PluginSettingTab {
 const replaceVarClass = (input: string): string => {
   if (!input.match('var')) return input;
 
-  console.log(`⭐  working on`, input);
-
   const className = (() => {
     // get line from input that contains the string var
     const varLine = input
