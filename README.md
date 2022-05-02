@@ -179,6 +179,20 @@ class DvTasks {
 #### Result
 ![Result](images/dvTasksExample.png)
 
+### Asynchronous Usage
+
+CustomJS loads your modules at Obsidian's startup by hooking an event that says that Obsidian is ready. This is an event that is used by _other_ plugins as well (such as [Templater](https://github.com/SilentVoid13/Templater) and its startup template), and unfortunately this means that if you want to use CustomJS with them there can be problems. 
+
+> `customJS` is not defined
+
+If you see issues where the `customJS` variable is not defined, this is when you want to force it to load before your script continues. In order to allow this, we provide the asynchronous function `forceLoadCustomJS()`, also defined globally. This means that you can `await` it, thereby ensuring that `customJS` will be available when you need it.
+
+```js
+await forceLoadCustomJS();
+```
+
+That said, most of the time ___you do not need to do this___. In the vast majority of JavaScript execution taking place within Obsidian, customJS will be loaded.
+
 ## ☕️ Support
 Do you find CustomJS useful? Consider buying me a coffee to fuel updates and more useful software like this. Thank you!
 
