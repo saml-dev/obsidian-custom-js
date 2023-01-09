@@ -58,12 +58,13 @@ export default class CustomJS extends Plugin {
     await this.saveData(this.settings);
   }
 
-  async evalFile(f: string, customjs: any): Promise<void> {
+  async evalFile(f: string): Promise<void> {
     try {
       const file = await this.app.vault.adapter.read(f)
       const def = eval('(' + file + ')')
       const cls = new def()
-      customjs[cls.constructor.name] = cls
+      // @ts-ignore
+      window.customJS[cls.constructor.name] = cls 
     } catch (e) {
       console.error(`CustomJS couldn\'t import ${f}`)
       console.error(e)
@@ -71,7 +72,8 @@ export default class CustomJS extends Plugin {
   }
 
   async loadClasses() {
-    const customjs = {}
+    // @ts-ignore
+    window.customJS = {}
     const filesToLoad = [];
 
     // Get individual paths
@@ -101,11 +103,8 @@ export default class CustomJS extends Plugin {
 
     // load all scripts
     for (const f of filesToLoad) {
-      await this.evalFile(f, customjs);
+      await this.evalFile(f);
     }
-
-    // @ts-ignore
-    window.customJS = customjs;
   }
 
   sortByFileName(files: string[]) {
