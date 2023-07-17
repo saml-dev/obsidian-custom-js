@@ -1,4 +1,5 @@
 import { App, Plugin, PluginSettingTab, Setting, TAbstractFile } from 'obsidian';
+import * as obsidian from 'obsidian';
 // @ts-ignore
 import compareVersions from 'compare-versions';
 
@@ -73,7 +74,7 @@ export default class CustomJS extends Plugin {
 
   async loadClasses() {
     // @ts-ignore
-    window.customJS = {}
+    window.customJS = { obsidian };
     const filesToLoad = [];
 
     // Get individual paths
