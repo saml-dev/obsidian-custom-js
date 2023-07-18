@@ -6,11 +6,21 @@ import compareVersions from 'compare-versions';
 interface CustomJSSettings {
   jsFiles: string;
   jsFolder: string;
+  startupScriptNames: string;
 }
 
 const DEFAULT_SETTINGS: CustomJSSettings = {
   jsFiles: '',
   jsFolder: '',
+  startupScriptNames: 'Startup'
+}
+
+interface Invocable {
+  invoke: () => Promise<void>;
+}
+
+function isInvocable(x: any): x is Invocable {
+  return typeof x?.invoke === 'function';
 }
 
 export default class CustomJS extends Plugin {
@@ -106,6 +116,28 @@ export default class CustomJS extends Plugin {
     for (const f of filesToLoad) {
       await this.evalFile(f);
     }
+
+    for (const startupScriptName of this.settings.startupScriptNames.split(',').map(s => s.trim())) {
+      // @ts-ignore
+      const startupScript = window.customJS[startupScriptName];
+
+      if (!startupScript) {
+        console.warn(`Startup script '${startupScriptName}' is not defined`);
+        continue;
+      }
+
+      if (!isInvocable(startupScript)) {
+        console.warn(`Startup script '${startupScriptName}' is not invocable`);
+        continue;
+      }
+
+      try {
+        await startupScript.invoke();
+      } catch(e) {
+        console.error(`Startup script '${startupScriptName}' failed`);
+        console.error(e);
+      }
+    }
   }
 
   sortByFileName(files: string[]) {
@@ -157,5 +189,18 @@ class CustomJSSettingsTab extends PluginSettingTab {
           await this.plugin.loadClasses();
         })
       );
+
+      new Setting(containerEl)
+        .setName('Startup script names')
+        .setDesc('Comma-separated list of Startup script names')
+        .addText(text => text
+          .setPlaceholder('Startup, Autostart')
+          .setValue(this.plugin.settings.startupScriptNames)
+          .onChange(async (value) => {
+            this.plugin.settings.startupScriptNames = value;
+            await this.plugin.saveSettings();
+            await this.plugin.loadClasses();
+          })
+        );
   }
 }
