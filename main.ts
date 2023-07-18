@@ -1,7 +1,5 @@
 import { App, Plugin, PluginSettingTab, Setting, TAbstractFile } from 'obsidian';
-import * as compareVersionsLib from 'compare-versions';
-
-const compareVersions = compareVersionsLib as (firstVersion: string, secondVersion: string) => 1 | 0 | -1
+import compareVersions from 'compare-versions';
 
 interface CustomJSSettings {
   jsFiles: string;
