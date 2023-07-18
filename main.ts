@@ -5,7 +5,7 @@ import compareVersions from 'compare-versions';
 interface CustomJSSettings {
   jsFiles: string;
   jsFolder: string;
-  registeredCustomScriptNames: string[]
+  registeredCustomScriptNames: string[];
 }
 
 const DEFAULT_SETTINGS: CustomJSSettings = {
