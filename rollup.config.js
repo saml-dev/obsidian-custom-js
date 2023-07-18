@@ -23,7 +23,9 @@ const cfg = {
   },
   external: ['obsidian'],
   plugins: [
-    typescript(),
+    typescript({
+      allowSyntheticDefaultImports: true
+    }),
     nodeResolve({ browser: true }),
     commonjs(),
   ],
