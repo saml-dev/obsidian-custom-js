@@ -67,10 +67,20 @@ export default class CustomJS extends Plugin {
       return;
     }
 
-    const invocableScript = window.customJS[scriptName] as Invocable;
+    const scriptObj = window.customJS[scriptName];
+
+    if (!scriptObj) {
+      console.warn(`Script '${scriptName}' is not defined`);
+      return;
+    }
+
+    if (!isInvocable(scriptObj)) {
+      console.warn(`Script '${scriptName}' is not invocable`);
+      return;
+    }
 
     try {
-      await invocableScript.invoke();
+      await scriptObj.invoke();
     } catch(e) {
       const message = `Script '${scriptName}' failed`;
       new Notice(`${message}\n${e.message}\nSee error console for more details`);
@@ -149,24 +159,7 @@ export default class CustomJS extends Plugin {
     }
 
     for (const startupScriptName of this.settings.startupScriptNames.split(',').map(s => s.trim())) {
-      const startupScript = window.customJS[startupScriptName];
-
-      if (!startupScript) {
-        console.warn(`Startup script '${startupScriptName}' is not defined`);
-        continue;
-      }
-
-      if (!isInvocable(startupScript)) {
-        console.warn(`Startup script '${startupScriptName}' is not invocable`);
-        continue;
-      }
-
-      try {
-        await startupScript.invoke();
-      } catch(e) {
-        console.error(`Startup script '${startupScriptName}' failed`);
-        console.error(e);
-      }
+      await this.invokeScript(startupScriptName);
     }
   }
 
