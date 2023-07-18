@@ -1,7 +1,8 @@
 import { App, Plugin, PluginSettingTab, Setting, TAbstractFile } from 'obsidian';
 import * as obsidian from 'obsidian';
-// @ts-ignore
-import compareVersions from 'compare-versions';
+import * as compareVersionsLib from 'compare-versions';
+
+const compareVersions = compareVersionsLib as (firstVersion: string, secondVersion: string) => 1 | 0 | -1
 
 interface CustomJSSettings {
   jsFiles: string;
@@ -30,7 +31,6 @@ export default class CustomJS extends Plugin {
     console.log('Loading CustomJS');
     await this.loadSettings();
     this.registerEvent(this.app.vault.on('modify', this.reloadIfNeeded, this))
-    // @ts-ignore
     window.forceLoadCustomJS = async () => {
       await this.loadClasses();
     };
@@ -41,7 +41,6 @@ export default class CustomJS extends Plugin {
   }
 
   onunload() {
-    // @ts-ignore
     delete window.customJS;
   }
 
@@ -51,7 +50,6 @@ export default class CustomJS extends Plugin {
 
       // reload dataviewjs blocks if installed & version >= 0.4.11
       if (this.app.plugins.enabledPlugins.has("dataview")) {
-        // @ts-ignore
         const version = this.app.plugins.plugins?.dataview?.manifest.version;
         if (compareVersions(version, '0.4.11') < 0) return;
 
@@ -71,11 +69,10 @@ export default class CustomJS extends Plugin {
 
   async evalFile(f: string): Promise<void> {
     try {
-      const file = await this.app.vault.adapter.read(f)
-      const def = eval('(' + file + ')')
+      const file = await this.app.vault.adapter.read(f);
+      const def = eval('(' + file + ')') as new () => unknown;
       const cls = new def()
-      // @ts-ignore
-      window.customJS[cls.constructor.name] = cls 
+      window.customJS[cls.constructor.name] = cls;
     } catch (e) {
       console.error(`CustomJS couldn\'t import ${f}`)
       console.error(e)
@@ -83,7 +80,6 @@ export default class CustomJS extends Plugin {
   }
 
   async loadClasses() {
-    // @ts-ignore
     window.customJS = { obsidian };
     const filesToLoad = [];
 
@@ -118,7 +114,6 @@ export default class CustomJS extends Plugin {
     }
 
     for (const startupScriptName of this.settings.startupScriptNames.split(',').map(s => s.trim())) {
-      // @ts-ignore
       const startupScript = window.customJS[startupScriptName];
 
       if (!startupScript) {
