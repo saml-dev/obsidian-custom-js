@@ -40,8 +40,8 @@ export default class CustomJS extends Plugin {
     this.addSettingTab(new CustomJSSettingsTab(this.app, this));
 
     this.addCommand({
-      id: "invokeScript",
-      name: "Invoke Script",
+      id: 'invokeScript',
+      name: 'Invoke Script',
       callback: this.selectAndInvokeScript.bind(this),
     });
 
@@ -92,7 +92,7 @@ export default class CustomJS extends Plugin {
       await this.loadClasses();
 
       // reload dataviewjs blocks if installed & version >= 0.4.11
-      if (this.app.plugins.enabledPlugins.has("dataview")) {
+      if (this.app.plugins.enabledPlugins.has('dataview')) {
         const version = this.app.plugins.plugins?.dataview?.manifest.version;
         if (compareVersions(version, '0.4.11') < 0) return;
 
@@ -264,17 +264,17 @@ class CustomJSSettingsTab extends PluginSettingTab {
           .setDisabled(true)
         )
         .addExtraButton(cb => cb
-          .setIcon("any-key")
-          .setTooltip("Configure Hotkey")
+          .setIcon('any-key')
+          .setTooltip('Configure Hotkey')
           .onClick(() => {
-            const hotkeysTab = this.app.setting.openTabById("hotkeys");
+            const hotkeysTab = this.app.setting.openTabById('hotkeys');
             hotkeysTab.searchComponent.setValue(`${this.plugin.manifest.name}: ${scriptName}`);
             hotkeysTab.updateHotkeyVisibility();
           })
         )
         .addExtraButton(cb => cb
-          .setIcon("cross")
-          .setTooltip("Delete")
+          .setIcon('cross')
+          .setTooltip('Delete')
           .onClick(async () => {
             this.plugin.unregisterInvocableScript(scriptName);
             this.display();
@@ -284,7 +284,7 @@ class CustomJSSettingsTab extends PluginSettingTab {
 
     new Setting(this.containerEl)
       .addButton(cb => cb
-        .setButtonText("Add new hotkey for script")
+        .setButtonText('Add new hotkey for script')
         .setCta()
         .onClick(async () => {
             const modal = new InvokeScriptFuzzySuggestModal(this.app, this.plugin.settings.registeredInvocableScriptNames);
