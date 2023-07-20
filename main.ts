@@ -5,14 +5,14 @@ import compareVersions from 'compare-versions';
 interface CustomJSSettings {
   jsFiles: string;
   jsFolder: string;
-  startupScriptNames: string;
+  startupScriptNames: string[];
   registeredInvocableScriptNames: string[];
 }
 
 const DEFAULT_SETTINGS: CustomJSSettings = {
   jsFiles: '',
   jsFolder: '',
-  startupScriptNames: 'Startup',
+  startupScriptNames: [],
   registeredInvocableScriptNames: []
 }
 
@@ -156,7 +156,7 @@ export default class CustomJS extends Plugin {
       await this.evalFile(f);
     }
 
-    for (const startupScriptName of this.settings.startupScriptNames.split(',').map(s => s.trim())) {
+    for (const startupScriptName of this.settings.startupScriptNames) {
       await this.invokeScript(startupScriptName);
     }
   }
@@ -192,6 +192,17 @@ export default class CustomJS extends Plugin {
     this.app.commands.removeCommand(`${this.manifest.id}:${this.getInvocableScriptCommandId(scriptName)}`)
     const index = this.settings.registeredInvocableScriptNames.indexOf(scriptName);
     this.settings.registeredInvocableScriptNames.splice(index, 1);
+    await this.saveSettings();
+  }
+
+  async addStartupScript(scriptName: string) {
+    this.settings.startupScriptNames.push(scriptName);
+    await this.saveSettings();
+  }
+
+  async deleteStartupScript(scriptName: string) {
+    const index = this.settings.startupScriptNames.indexOf(scriptName);
+    this.settings.startupScriptNames.splice(index, 1);
     await this.saveSettings();
   }
 }
@@ -238,17 +249,38 @@ class CustomJSSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName('Startup script names')
-      .setDesc('Comma-separated list of Startup script names')
-      .addText(text => text
-        .setPlaceholder('Startup, Autostart')
-        .setValue(this.plugin.settings.startupScriptNames)
-        .onChange(async (value) => {
-          this.plugin.settings.startupScriptNames = value;
-          await this.plugin.saveSettings();
-          await this.plugin.loadClasses();
-        })
-      );
+      .setName('Startup scripts')
+      .setDesc('Scripts executed when the plugin is loaded');
+
+    for (const scriptName of this.plugin.settings.startupScriptNames) {
+      new Setting(containerEl)
+        .addText(text => text
+          .setValue(scriptName)
+          .setDisabled(true)
+        )
+        .addExtraButton(cb => cb
+          .setIcon('cross')
+          .setTooltip('Delete')
+          .onClick(async () => {
+            this.plugin.deleteStartupScript(scriptName);
+            this.display();
+          })
+        );
+    }
+
+    new Setting(this.containerEl)
+    .addButton(cb => cb
+      .setButtonText('Add startup script')
+      .setCta()
+      .onClick(async () => {
+          const modal = new InvokeScriptFuzzySuggestModal(this.app, this.plugin.settings.startupScriptNames);
+          const scriptName = await modal.promise;
+          if (scriptName) {
+            this.plugin.addStartupScript(scriptName);
+            this.display();
+          }
+      })
+    );
 
     const descriptionTemplate = document.createElement('template');
     descriptionTemplate.innerHTML = 'Allows you to bind an <dfn title="the class with `async invoke()` method">invocable script</dfn> to a hotkey';
@@ -284,7 +316,7 @@ class CustomJSSettingsTab extends PluginSettingTab {
 
     new Setting(this.containerEl)
       .addButton(cb => cb
-        .setButtonText('Add new hotkey for script')
+        .setButtonText('Register invocable script')
         .setCta()
         .onClick(async () => {
             const modal = new InvokeScriptFuzzySuggestModal(this.app, this.plugin.settings.registeredInvocableScriptNames);
