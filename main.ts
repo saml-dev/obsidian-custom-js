@@ -6,14 +6,14 @@ interface CustomJSSettings {
   jsFiles: string;
   jsFolder: string;
   startupScriptNames: string;
-  registeredCustomScriptNames: string[];
+  registeredInvocableScriptNames: string[];
 }
 
 const DEFAULT_SETTINGS: CustomJSSettings = {
   jsFiles: '',
   jsFolder: '',
   startupScriptNames: 'Startup',
-  registeredCustomScriptNames: []
+  registeredInvocableScriptNames: []
 }
 
 interface Invocable {
@@ -45,8 +45,8 @@ export default class CustomJS extends Plugin {
       callback: this.selectAndInvokeScript.bind(this),
     });
 
-    for (const scriptName of this.settings.registeredCustomScriptNames) {
-      this.registerCustomScript(scriptName);
+    for (const scriptName of this.settings.registeredInvocableScriptNames) {
+      this.registerInvocableScript(scriptName);
     }
   }
 
@@ -169,29 +169,29 @@ export default class CustomJS extends Plugin {
     })
   }
 
-  private getCustomScriptCommandId(scriptName: string) {
-    return `invoke-custom-${scriptName}`;
+  private getInvocableScriptCommandId(scriptName: string) {
+    return `invoke-${scriptName}`;
   }
 
-  async registerCustomScript(scriptName: string) {
+  async registerInvocableScript(scriptName: string) {
     this.addCommand({
-      id: this.getCustomScriptCommandId(scriptName),
+      id: this.getInvocableScriptCommandId(scriptName),
       name: scriptName,
       callback: async () => {
         await this.invokeScript(scriptName)
       },
     });
 
-    if (!this.settings.registeredCustomScriptNames.includes(scriptName)) {
-      this.settings.registeredCustomScriptNames.push(scriptName);
+    if (!this.settings.registeredInvocableScriptNames.includes(scriptName)) {
+      this.settings.registeredInvocableScriptNames.push(scriptName);
       await this.saveSettings();
     }
   }
 
-  async unregisterCustomScript(scriptName: string) {
-    this.app.commands.removeCommand(`${this.manifest.id}:${this.getCustomScriptCommandId(scriptName)}`)
-    const index = this.settings.registeredCustomScriptNames.indexOf(scriptName);
-    this.settings.registeredCustomScriptNames.splice(index, 1);
+  async unregisterInvocableScript(scriptName: string) {
+    this.app.commands.removeCommand(`${this.manifest.id}:${this.getInvocableScriptCommandId(scriptName)}`)
+    const index = this.settings.registeredInvocableScriptNames.indexOf(scriptName);
+    this.settings.registeredInvocableScriptNames.splice(index, 1);
     await this.saveSettings();
   }
 }
@@ -257,7 +257,7 @@ class CustomJSSettingsTab extends PluginSettingTab {
       .setName('Registered invocable scripts')
       .setDesc(descriptionTemplate.content);
 
-    for (const scriptName of this.plugin.settings.registeredCustomScriptNames) {
+    for (const scriptName of this.plugin.settings.registeredInvocableScriptNames) {
       new Setting(containerEl)
         .addText(text => text
           .setValue(scriptName)
@@ -276,7 +276,7 @@ class CustomJSSettingsTab extends PluginSettingTab {
           .setIcon("cross")
           .setTooltip("Delete")
           .onClick(async () => {
-            this.plugin.unregisterCustomScript(scriptName);
+            this.plugin.unregisterInvocableScript(scriptName);
             this.display();
           })
         );
@@ -287,10 +287,10 @@ class CustomJSSettingsTab extends PluginSettingTab {
         .setButtonText("Add new hotkey for script")
         .setCta()
         .onClick(async () => {
-            const modal = new InvokeScriptFuzzySuggestModal(this.app, this.plugin.settings.registeredCustomScriptNames);
+            const modal = new InvokeScriptFuzzySuggestModal(this.app, this.plugin.settings.registeredInvocableScriptNames);
             const scriptName = await modal.promise;
             if (scriptName) {
-              this.plugin.registerCustomScript(scriptName);
+              this.plugin.registerInvocableScript(scriptName);
               this.display();
             }
         })
