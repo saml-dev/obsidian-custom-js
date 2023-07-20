@@ -250,9 +250,12 @@ class CustomJSSettingsTab extends PluginSettingTab {
         })
       );
 
+    const descriptionTemplate = document.createElement('template');
+    descriptionTemplate.innerHTML = 'Allows you to bind an <dfn title="the class with `async invoke()` method">invocable script</dfn> to a hotkey';
+
     new Setting(containerEl)
-      .setName('Registered custom scripts')
-      .setDesc('Allows you to bind an invocable script to a hotkey');
+      .setName('Registered invocable scripts')
+      .setDesc(descriptionTemplate.content);
 
     for (const scriptName of this.plugin.settings.registeredCustomScriptNames) {
       new Setting(containerEl)
