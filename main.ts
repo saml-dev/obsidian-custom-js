@@ -1,15 +1,25 @@
-import { App, Plugin, PluginSettingTab, Setting, TAbstractFile } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, TAbstractFile, FuzzySuggestModal, FuzzyMatch, Notice } from 'obsidian';
 import * as obsidian from 'obsidian';
 import compareVersions from 'compare-versions';
 
 interface CustomJSSettings {
   jsFiles: string;
   jsFolder: string;
+  registeredInvocableScriptNames: string[];
 }
 
 const DEFAULT_SETTINGS: CustomJSSettings = {
   jsFiles: '',
   jsFolder: '',
+  registeredInvocableScriptNames: []
+}
+
+interface Invocable {
+  invoke: () => Promise<void>;
+}
+
+function isInvocable(x: any): x is Invocable {
+  return typeof x?.invoke === 'function';
 }
 
 export default class CustomJS extends Plugin {
@@ -26,10 +36,53 @@ export default class CustomJS extends Plugin {
       this.loadClasses();
     });
     this.addSettingTab(new CustomJSSettingsTab(this.app, this));
+
+    this.addCommand({
+      id: 'invokeScript',
+      name: 'Invoke Script',
+      callback: this.selectAndInvokeScript.bind(this),
+    });
+
+    for (const scriptName of this.settings.registeredInvocableScriptNames) {
+      this.registerInvocableScript(scriptName);
+    }
   }
 
   onunload() {
     delete window.customJS;
+  }
+
+  private async selectAndInvokeScript() {
+    const modal = new InvocableScriptSelectorModal(this.app, []);
+    const scriptName = await modal.promise;
+    await this.invokeScript(scriptName);
+  }
+
+  public async invokeScript(scriptName: string | null) {
+    if (!scriptName) {
+      return;
+    }
+
+    const scriptObj = window.customJS[scriptName];
+
+    if (!scriptObj) {
+      console.warn(`Script '${scriptName}' is not defined`);
+      return;
+    }
+
+    if (!isInvocable(scriptObj)) {
+      console.warn(`Script '${scriptName}' is not invocable`);
+      return;
+    }
+
+    try {
+      await scriptObj.invoke();
+    } catch(e) {
+      const message = `Script '${scriptName}' failed`;
+      new Notice(`${message}\n${e.message}\nSee error console for more details`);
+      console.error(message);
+      console.error(e);
+    }
   }
 
   async reloadIfNeeded(f: TAbstractFile) {
@@ -109,6 +162,32 @@ export default class CustomJS extends Plugin {
       return nameA.localeCompare(nameB);
     })
   }
+
+  private getInvocableScriptCommandId(scriptName: string) {
+    return `invoke-${scriptName}`;
+  }
+
+  async registerInvocableScript(scriptName: string) {
+    this.addCommand({
+      id: this.getInvocableScriptCommandId(scriptName),
+      name: scriptName,
+      callback: async () => {
+        await this.invokeScript(scriptName)
+      },
+    });
+
+    if (!this.settings.registeredInvocableScriptNames.includes(scriptName)) {
+      this.settings.registeredInvocableScriptNames.push(scriptName);
+      await this.saveSettings();
+    }
+  }
+
+  async unregisterInvocableScript(scriptName: string) {
+    this.app.commands.removeCommand(`${this.manifest.id}:${this.getInvocableScriptCommandId(scriptName)}`)
+    const index = this.settings.registeredInvocableScriptNames.indexOf(scriptName);
+    this.settings.registeredInvocableScriptNames.splice(index, 1);
+    await this.saveSettings();
+  }
 }
 
 class CustomJSSettingsTab extends PluginSettingTab {
@@ -151,5 +230,101 @@ class CustomJSSettingsTab extends PluginSettingTab {
           await this.plugin.loadClasses();
         })
       );
+
+    const descriptionTemplate = document.createElement('template');
+    descriptionTemplate.innerHTML = 'Allows you to bind an <dfn title="the class with `async invoke()` method">invocable script</dfn> to a hotkey';
+
+    new Setting(containerEl)
+      .setName('Registered invocable scripts')
+      .setDesc(descriptionTemplate.content);
+
+    for (const scriptName of this.plugin.settings.registeredInvocableScriptNames) {
+      new Setting(containerEl)
+        .addText(text => text
+          .setValue(scriptName)
+          .setDisabled(true)
+        )
+        .addExtraButton(cb => cb
+          .setIcon('any-key')
+          .setTooltip('Configure Hotkey')
+          .onClick(() => {
+            const hotkeysTab = this.app.setting.openTabById('hotkeys');
+            hotkeysTab.searchComponent.setValue(`${this.plugin.manifest.name}: ${scriptName}`);
+            hotkeysTab.updateHotkeyVisibility();
+          })
+        )
+        .addExtraButton(cb => cb
+          .setIcon('cross')
+          .setTooltip('Delete')
+          .onClick(async () => {
+            this.plugin.unregisterInvocableScript(scriptName);
+            this.display();
+          })
+        );
+    }
+
+    new Setting(this.containerEl)
+      .addButton(cb => cb
+        .setButtonText('Register invocable script')
+        .setCta()
+        .onClick(async () => {
+            const modal = new InvocableScriptSelectorModal(this.app, this.plugin.settings.registeredInvocableScriptNames);
+            const scriptName = await modal.promise;
+            if (scriptName) {
+              this.plugin.registerInvocableScript(scriptName);
+              this.display();
+            }
+        })
+      );
+  }
+}
+
+class InvocableScriptSelectorModal extends FuzzySuggestModal<string> {
+  private resolve: (value: string) => void;
+  private isSelected: boolean;
+  private excludedScriptNames: Set<string>;
+  public promise: Promise<string>;
+
+  constructor(app: App, excludedScriptNames: string[]) {
+    super(app);
+
+    this.promise = new Promise<string>((resolve) => {
+      this.resolve = resolve;
+    });
+
+    this.excludedScriptNames = new Set<string>(excludedScriptNames);
+    this.open();
+  }
+
+  getItems(): string[] {
+    const entries = (Object.entries(window.customJS) as [string, any][]).map(entry => ({
+      scriptName: entry[0],
+      scriptObj: entry[1]
+    }));
+    const invocableScriptNames = entries
+      .filter(entry => isInvocable(entry.scriptObj))
+      .map(entry => entry.scriptName)
+      .filter(scriptName => !this.excludedScriptNames.has(scriptName))
+      .sort();
+    return invocableScriptNames;
+  }
+
+  getItemText(item: string): string {
+    return item;
+  }
+
+  selectSuggestion(value: FuzzyMatch<string>, evt: MouseEvent | KeyboardEvent): void {
+    this.isSelected = true;
+    super.selectSuggestion(value, evt);
+  }
+
+  onChooseItem(item: string, evt: MouseEvent | KeyboardEvent): void {
+    this.resolve(item);
+  }
+
+  onClose(): void {
+    if (!this.isSelected) {
+      this.resolve(null);
+    }
   }
 }

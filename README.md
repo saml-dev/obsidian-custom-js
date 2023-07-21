@@ -24,6 +24,10 @@ Path to a folder that contains JS files you'd like to load. The folder setting w
 
 > ⚠️ Files are loaded in alphabetical order by ***file name*** for consistency, enabling dependencies on each other.
 
+### Registered invocable scripts
+
+Allows you to bind an [Invocable Script](#invocable-scripts) to a hotkey.
+
 ## Usage/Example
 
 CustomJS works by writing javascript classes. Each file can only contain one class.
@@ -192,6 +196,20 @@ await forceLoadCustomJS();
 ```
 
 That said, most of the time ___you do not need to do this___. In the vast majority of JavaScript execution taking place within Obsidian, customJS will be loaded.
+
+### Invocable Scripts
+
+*Invocable Script* is the class with the defined method
+
+```js
+async invoke() {
+  ...
+}
+```
+
+You can run such scripts via `CustomJS: Invoke Script` command.
+
+Also you can register individual commands via [settings](#registered-invocable-scripts) for the desired script and invoke it via `CustomJS: MyScriptName` command. Additionally you can assign a custom hotkey for that registered commands.
 
 ## ☕️ Support
 Do you find CustomJS useful? Consider buying me a coffee to fuel updates and more useful software like this. Thank you!
