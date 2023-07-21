@@ -117,7 +117,11 @@ export default class CustomJS extends Plugin {
   async evalFile(f: string): Promise<void> {
     try {
       const file = await this.app.vault.adapter.read(f);
-      const def = eval('(' + file + ')') as new () => unknown;
+      const wrappedCodeWithDebugging = `(${file})
+//# sourceURL=${f}
+//# sourceMappingURL=data:application/json;base64,${btoa(file)}
+`;
+      const def = eval(wrappedCodeWithDebugging) as new () => unknown;
       const cls = new def()
       window.customJS[cls.constructor.name] = cls;
     } catch (e) {
