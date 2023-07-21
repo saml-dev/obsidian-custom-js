@@ -28,6 +28,12 @@ Path to a folder that contains JS files you'd like to load. The folder setting w
 
 Allows you to bind an [Invocable Script](#invocable-scripts) to a hotkey.
 
+### Startup scripts
+
+[Invocable Scripts](#invocable-scripts) executed when the plugin is loaded. You may want use it to initialize something when Obsidian is loaded.
+
+> ⚠️ Changes that you make in `Startup scripts` to the `window.customJS` object and its properties are not preserved and will be overridden every time you modify any `.js` file in the vault.
+
 ## Usage/Example
 
 CustomJS works by writing javascript classes. Each file can only contain one class.

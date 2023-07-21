@@ -5,12 +5,14 @@ import compareVersions from 'compare-versions';
 interface CustomJSSettings {
   jsFiles: string;
   jsFolder: string;
+  startupScriptNames: string[];
   registeredInvocableScriptNames: string[];
 }
 
 const DEFAULT_SETTINGS: CustomJSSettings = {
   jsFiles: '',
   jsFolder: '',
+  startupScriptNames: [],
   registeredInvocableScriptNames: []
 }
 
@@ -32,8 +34,12 @@ export default class CustomJS extends Plugin {
     window.forceLoadCustomJS = async () => {
       await this.loadClasses();
     };
-    this.app.workspace.onLayoutReady(() => {
-      this.loadClasses();
+    this.app.workspace.onLayoutReady(async () => {
+      await this.loadClasses();
+
+      for (const startupScriptName of this.settings.startupScriptNames) {
+        await this.invokeScript(startupScriptName);
+      }
     });
     this.addSettingTab(new CustomJSSettingsTab(this.app, this));
 
@@ -188,6 +194,17 @@ export default class CustomJS extends Plugin {
     this.settings.registeredInvocableScriptNames.splice(index, 1);
     await this.saveSettings();
   }
+
+  async addStartupScript(scriptName: string) {
+    this.settings.startupScriptNames.push(scriptName);
+    await this.saveSettings();
+  }
+
+  async deleteStartupScript(scriptName: string) {
+    const index = this.settings.startupScriptNames.indexOf(scriptName);
+    this.settings.startupScriptNames.splice(index, 1);
+    await this.saveSettings();
+  }
 }
 
 class CustomJSSettingsTab extends PluginSettingTab {
@@ -231,7 +248,7 @@ class CustomJSSettingsTab extends PluginSettingTab {
         })
       );
 
-    const descriptionTemplate = document.createElement('template');
+    let descriptionTemplate = document.createElement('template');
     descriptionTemplate.innerHTML = 'Allows you to bind an <dfn title="the class with `async invoke()` method">invocable script</dfn> to a hotkey';
 
     new Setting(containerEl)
@@ -276,6 +293,43 @@ class CustomJSSettingsTab extends PluginSettingTab {
             }
         })
       );
+
+    descriptionTemplate = document.createElement('template');
+    descriptionTemplate.innerHTML = '<dfn title="the class with `async invoke()` method">Invocable scripts</dfn> executed when the plugin is loaded';
+
+    new Setting(containerEl)
+      .setName('Startup scripts')
+      .setDesc(descriptionTemplate.content);
+
+    for (const scriptName of this.plugin.settings.startupScriptNames) {
+      new Setting(containerEl)
+        .addText(text => text
+          .setValue(scriptName)
+          .setDisabled(true)
+        )
+        .addExtraButton(cb => cb
+          .setIcon('cross')
+          .setTooltip('Delete')
+          .onClick(async () => {
+            this.plugin.deleteStartupScript(scriptName);
+            this.display();
+          })
+        );
+    }
+
+    new Setting(this.containerEl)
+    .addButton(cb => cb
+      .setButtonText('Add startup script')
+      .setCta()
+      .onClick(async () => {
+          const modal = new InvocableScriptSelectorModal(this.app, this.plugin.settings.startupScriptNames);
+          const scriptName = await modal.promise;
+          if (scriptName) {
+            this.plugin.addStartupScript(scriptName);
+            this.display();
+          }
+      })
+    );
   }
 }
 
