@@ -1,6 +1,7 @@
 import { App, Plugin, PluginSettingTab, Setting, TAbstractFile, FuzzySuggestModal, FuzzyMatch, Notice } from 'obsidian';
 import * as obsidian from 'obsidian';
 import compareVersions from 'compare-versions';
+import debuggableEval from 'debuggable-eval';
 
 interface CustomJSSettings {
   jsFiles: string;
@@ -117,11 +118,7 @@ export default class CustomJS extends Plugin {
   async evalFile(f: string): Promise<void> {
     try {
       const file = await this.app.vault.adapter.read(f);
-      const wrappedCodeWithDebugging = `(${file})
-//# sourceURL=${f}
-//# sourceMappingURL=data:application/json;base64,${btoa(file)}
-`;
-      const def = eval(wrappedCodeWithDebugging) as new () => unknown;
+      const def = debuggableEval(`(${file})`, f) as new () => unknown;
       const cls = new def()
       window.customJS[cls.constructor.name] = cls;
     } catch (e) {
