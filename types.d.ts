@@ -6,6 +6,7 @@ declare global {
     forceLoadCustomJS?: () => Promise<void>;
     customJS?: {
       obsidian?: typeof obsidian,
+      state?: {}
       [scriptName: string]: unknown
     }
   }

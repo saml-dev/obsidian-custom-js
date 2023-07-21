@@ -32,7 +32,7 @@ Allows you to bind an [Invocable Script](#invocable-scripts) to a hotkey.
 
 [Invocable Scripts](#invocable-scripts) executed when the plugin is loaded. You may want use it to initialize something when Obsidian is loaded.
 
-> ⚠️ Changes that you make in `Startup scripts` to the `window.customJS` object and its properties are not preserved and will be overridden every time you modify any `.js` file in the vault.
+> ⚠️ Changes made in the `Startup scripts` to the `window.customJS` object might get overridden. To avoid that follow [State](#state) tips.
 
 ## Usage/Example
 
@@ -216,6 +216,10 @@ async invoke() {
 You can run such scripts via `CustomJS: Invoke Script` command.
 
 Also you can register individual commands via [settings](#registered-invocable-scripts) for the desired script and invoke it via `CustomJS: MyScriptName` command. Additionally you can assign a custom hotkey for that registered commands.
+
+### State
+
+`window.customJS` object is being overridden every time any `js` file is modified in the vault. If you need some data to be preserved during such modifications, store them in `window.customJS.state`.
 
 ## ☕️ Support
 Do you find CustomJS useful? Consider buying me a coffee to fuel updates and more useful software like this. Thank you!

@@ -127,7 +127,10 @@ export default class CustomJS extends Plugin {
   }
 
   async loadClasses() {
-    window.customJS = { obsidian };
+    window.customJS = { 
+      obsidian,
+      state: window.customJS?.state ?? {}
+    };
     const filesToLoad = [];
 
     // Get individual paths
