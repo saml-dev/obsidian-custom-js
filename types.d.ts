@@ -1,5 +1,5 @@
-import * as obsidian from "obsidian";
-import { DataviewAPI } from "obsidian-dataview";
+import * as obsidian from 'obsidian';
+import { DataviewAPI } from 'obsidian-dataview';
 
 declare global {
   interface Window {
@@ -12,7 +12,7 @@ declare global {
   }
 }
 
-declare module "obsidian" {
+declare module 'obsidian' {
   interface App {
     plugins: {
       enabledPlugins: Set<string>;
@@ -38,17 +38,17 @@ declare module "obsidian" {
   }
   interface MetadataCache {
     on(
-      name: "dataview:api-ready",
+      name: 'dataview:api-ready',
       callback: (api: DataviewAPI) => any,
       ctx?: any
     ): EventRef;
     on(
-      name: "dataview:metadata-change",
+      name: 'dataview:metadata-change',
       callback: (
         ...args:
-          | [op: "rename", file: TAbstractFile, oldPath: string]
-          | [op: "delete", file: TFile]
-          | [op: "update", file: TFile]
+          | [op: 'rename', file: TAbstractFile, oldPath: string]
+          | [op: 'delete', file: TFile]
+          | [op: 'update', file: TFile]
       ) => any,
       ctx?: any
     ): EventRef;
