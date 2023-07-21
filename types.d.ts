@@ -24,6 +24,15 @@ declare module "obsidian" {
           }
         };
       };
+    },
+    setting: {
+      openTabById: (tabId: 'hotkeys') => {
+        searchComponent: SearchComponent,
+        updateHotkeyVisibility: () => void
+      }
+    },
+    commands: {
+      removeCommand: (commandName: string) => void;
     }
   }
   interface MetadataCache {
