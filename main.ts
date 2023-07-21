@@ -48,6 +48,10 @@ export default class CustomJS extends Plugin {
     for (const scriptName of this.settings.registeredInvocableScriptNames) {
       this.registerInvocableScript(scriptName);
     }
+
+    for (const startupScriptName of this.settings.startupScriptNames) {
+      await this.invokeScript(startupScriptName);
+    }
   }
 
   onunload() {
@@ -154,10 +158,6 @@ export default class CustomJS extends Plugin {
     // load all scripts
     for (const f of filesToLoad) {
       await this.evalFile(f);
-    }
-
-    for (const startupScriptName of this.settings.startupScriptNames) {
-      await this.invokeScript(startupScriptName);
     }
   }
 
