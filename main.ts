@@ -34,8 +34,12 @@ export default class CustomJS extends Plugin {
     window.forceLoadCustomJS = async () => {
       await this.loadClasses();
     };
-    this.app.workspace.onLayoutReady(() => {
-      this.loadClasses();
+    this.app.workspace.onLayoutReady(async () => {
+      await this.loadClasses();
+
+      for (const startupScriptName of this.settings.startupScriptNames) {
+        await this.invokeScript(startupScriptName);
+      }
     });
     this.addSettingTab(new CustomJSSettingsTab(this.app, this));
 
@@ -47,10 +51,6 @@ export default class CustomJS extends Plugin {
 
     for (const scriptName of this.settings.registeredInvocableScriptNames) {
       this.registerInvocableScript(scriptName);
-    }
-
-    for (const startupScriptName of this.settings.startupScriptNames) {
-      await this.invokeScript(startupScriptName);
     }
   }
 
