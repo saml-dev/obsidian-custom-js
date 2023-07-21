@@ -1,5 +1,15 @@
-import "obsidian";
-import { DataviewApi } from "obsidian-dataview";
+import * as obsidian from "obsidian";
+import { DataviewAPI } from "obsidian-dataview";
+
+declare global {
+  interface Window {
+    forceLoadCustomJS?: () => Promise<void>;
+    customJS?: {
+      obsidian?: typeof obsidian,
+      [scriptName: string]: unknown
+    }
+  }
+}
 
 declare module "obsidian" {
   interface App {
@@ -8,7 +18,10 @@ declare module "obsidian" {
       plugins: {
         [id: string]: any;
         dataview?: {
-          api?: DataviewApi;
+          api?: DataviewAPI;
+          manifest: {
+            version: string
+          }
         };
       };
     }
@@ -16,7 +29,7 @@ declare module "obsidian" {
   interface MetadataCache {
     on(
       name: "dataview:api-ready",
-      callback: (api: DataviewApi) => any,
+      callback: (api: DataviewAPI) => any,
       ctx?: any
     ): EventRef;
     on(
