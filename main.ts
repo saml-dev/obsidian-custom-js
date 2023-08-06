@@ -96,7 +96,7 @@ export default class CustomJS extends Plugin {
       await this.loadClasses();
 
       // reload dataviewjs blocks if installed & version >= 0.4.11
-      if (this.app.plugins.enabledPlugins.has("dataview")) {
+      if (this.app.plugins.enabledPlugins.has('dataview')) {
         const version = this.app.plugins.plugins?.dataview?.manifest.version;
         if (compareVersions(version, '0.4.11') < 0) return;
 
