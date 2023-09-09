@@ -1,12 +1,14 @@
 # Intellij
 *.iml
 .idea
+settings.json
 
 # npm
 node_modules
 package-lock.json
 
 # build
+build
 main.js
 *.js.map
 
@@ -15,3 +17,4 @@ data.json
 
 # mac
 .DS_store
+
