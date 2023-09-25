@@ -225,3 +225,24 @@ Also you can register individual commands via [settings](#registered-invocable-s
 Do you find CustomJS useful? Consider buying me a coffee to fuel updates and more useful software like this. Thank you!
 
 <a href="https://www.buymeacoffee.com/samlewis" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+
+## Local development
+
+1. Clone this repository into `<vaultpath>/.obsidian/plugins`
+
+Note: it is recommended to use a test vault when developing plugins.
+
+2. (if you are using node version manager, use the version from package.json -> devDependencies -> @types/node)
+
+3. Install dependencies: `npm install`
+
+4. Build in dev mode with `npm run dev`
+
+NOTE: if you place your repository somewhere else than in `plugins`, you can customize the output path with
+
+`OUTPUT_DIR=<vaultpath>/.obsidian/plugins/obsidian-custom-js npm run dev`
+
+See also:
+
+- Obsidian development guide: https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin
+- Hot reloading plugin: https://docs.obsidian.md/Plugins/Getting+started/Development+workflow

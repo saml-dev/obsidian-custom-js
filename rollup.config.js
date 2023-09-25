@@ -14,7 +14,7 @@ if you want to view the source visit the plugins github repository
 const cfg = {
   input: 'main.ts',
   output: {
-    dir: isProd ? 'build' : '/Users/samlewis/Obsidian/Personal Notes/.obsidian/plugins/customjs/',
+    dir: isProd ? 'build' : './',
     sourcemap: 'inline',
     sourcemapExcludeSources: isProd,
     format: 'cjs',
@@ -37,12 +37,28 @@ const cfg = {
 };
 
 if (!isProd) {
-  cfg.plugins.push(copy({
-    targets: [
-      { src: 'manifest.json', dest: '/Users/samlewis/Obsidian/Personal Notes/.obsidian/plugins/customjs/' },
-      { src: 'styles.css', dest: '/Users/samlewis/Obsidian/Personal Notes/.obsidian/plugins/customjs/' },
-    ]
-  }))
+  // Build by default to root of the plugin, but allow overriding if needed
+  // run with overrides with  OUTPUT_DIR='<path>' npm run dev
+  const devBuildPath = process.env.OUTPUT_DIR;
+
+  if(devBuildPath){
+    cfg.plugins.push(
+      copy({
+        targets: [
+          { src: 'manifest.json', dest: devBuildPath },
+          {
+            src: 'styles.css',
+            dest: devBuildPath,
+          },
+          {
+            src: 'main.js',
+            dest: devBuildPath,
+          },
+        ],
+      })
+    );
+  }
+  
 }
 
 export default cfg;
