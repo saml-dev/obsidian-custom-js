@@ -7,22 +7,27 @@ CustomJS is a plugin for Obsidian that allows users to write custom Javascript t
 ## Installation
 
 #### Recommended
+
 CustomJS is available in the Obsidian community plugin browser.
 
 #### Manual
+
 Go to the [releases](https://github.com/samlewis0602/obsidian-custom-js/releases) and download the latest `main.js` and `manifest.json` files. Create a folder called `customjs` inside `.obsidian/plugins` and place both files in it.
 
 ## Settings
+
 Tell CustomJS what code to load.
 NOTE: only use forward slashes in your paths, back slashes will break non-windows platforms.
 
 ### Individual files
+
 A comma-separated list of files you'd like to load.
 
 ### Folder
+
 Path to a folder that contains JS files you'd like to load. The folder setting will load all `*.js` files in that folder **recursively**. So setting `scripts` will load `scripts/a.js` and `scripts/other/b.js`.
 
-> ⚠️ Files are loaded in alphabetical order by ***file name*** for consistency, enabling dependencies on each other.
+> ⚠️ Files are loaded in alphabetical order by **_file name_** for consistency, enabling dependencies on each other.
 
 ### Registered invocable scripts
 
@@ -34,38 +39,55 @@ Allows you to bind an [Invocable Script](#invocable-scripts) to a hotkey.
 
 > ⚠️ Changes made in the `Startup scripts` to the `window.customJS` object might get overridden. To avoid that follow [State](#state) tips.
 
-## Usage/Example
+## How to use CustomJS
 
-CustomJS works by writing javascript classes. Each file can only contain one class.
+**IMPORTANT: CustomJS works by writing JavaScript classes. Each file can only contain one class.**
 
-````
-// in vault at scripts/coolString.js
+#### 1. Start by deciding where you want to place your scripts, say, in `scripts/`. Now, put your `.js` file there, following this template:
+
+```javascript
+// in vault, at scripts/coolString.js
 class CoolString {
-    coolify(s) {
-        return `😎 ${s} 😎`
-    }
+  coolify(s) {
+    return `😎 ${s} 😎`;
+  }
 }
+```
 
+Note: You can change the class name and the function name, but remember, **you need both a class and a function**! Otherwise it will not work.
 
-// dataviewjs block in *.md
+#### 2. In the CustomJS settings, you can set individual files as a script, or you can set a folder that contains several JS files. It is seperate—you don't need both for the same file. (Note: If you use an individual file, make sure to add the path as well.)
+
+So for our above file, we could set **either** the individual file to be `scripts/coolString.js`, OR the folder to be `scripts/`.
+
+#### 3. Then use it!
+
+Here's what it looks like in a [dataviewJS](https://blacksmithgu.github.io/obsidian-dataview/api/intro/) block:
+
 ```dataviewjs
+// dataviewjs block in *.md
 const {CoolString} = customJS
 dv.list(dv.pages().file.name.map(n => CoolString.coolify(n)))
 ```
 
+Here's how you'd use it in [Templater](https://silentvoid13.github.io/Templater/user-functions/overview.html).
+
+```templater
 // templater template
 <%*
 const {CoolString} = customJS;
 tR += CoolString.coolify(tp.file.title);
 %>
-````
+```
 
-Make sure you add `scripts/coolString.js` to the settings page for CustomJS and voila! When entering preview mode for the dataviewjs block you should see a list of all your files with a little extra 😎 — inserting the templater template will output a similar result with just the current file name.
+When entering preview mode for the dataviewjs block you should see a list of all your files with a little extra 😎 — inserting the templater template will output a similar result with just the current file name.
 
 ## Advanced example
+
 You can pass anything as parameters to your functions to allow for some incredible code reuse. A dataview example that I use to manage tasks:
 
 #### Daily note
+
 ````
 ```dataviewjs
 const {DvTasks} = customJS
@@ -80,12 +102,13 @@ DvTasks.getTasksNoDueDate({app, dv, luxon, that:this})
 ### Today's Tasks
 ```dataviewjs
 const {DvTasks} = customJS
-DvTasks.getTodayTasks({app, dv, luxon, that:this, date:'2021-08-25'}) 
+DvTasks.getTodayTasks({app, dv, luxon, that:this, date:'2021-08-25'})
 ```
 ### Daily Journal
 ````
 
 #### scripts/dvTasks.js
+
 ```
 class DvTasks {
   relDateString(d, luxon) {
@@ -187,11 +210,12 @@ class DvTasks {
 ```
 
 #### Result
+
 ![Result](images/dvTasksExample.png)
 
 ### Asynchronous Usage
 
-CustomJS loads your modules at Obsidian's startup by hooking an event that says that Obsidian is ready. This is an event that is used by _other_ plugins as well (such as [Templater](https://github.com/SilentVoid13/Templater) and its startup template), and unfortunately this means that if you want to use CustomJS with them there can be problems. 
+CustomJS loads your modules at Obsidian's startup by hooking an event that says that Obsidian is ready. This is an event that is used by _other_ plugins as well (such as [Templater](https://github.com/SilentVoid13/Templater) and its startup template), and unfortunately this means that if you want to use CustomJS with them there can be problems.
 
 > `customJS` is not defined
 
@@ -201,11 +225,11 @@ If you see issues where the `customJS` variable is not defined, this is when you
 await forceLoadCustomJS();
 ```
 
-That said, most of the time ___you do not need to do this___. In the vast majority of JavaScript execution taking place within Obsidian, customJS will be loaded.
+That said, most of the time **_you do not need to do this_**. In the vast majority of JavaScript execution taking place within Obsidian, customJS will be loaded.
 
 ### Invocable Scripts
 
-*Invocable Script* is the class with the defined method
+_Invocable Script_ is the class with the defined method
 
 ```js
 async invoke() {
@@ -222,6 +246,7 @@ Also you can register individual commands via [settings](#registered-invocable-s
 `window.customJS` object is being overridden every time any `js` file is modified in the vault. If you need some data to be preserved during such modifications, store them in `window.customJS.state`.
 
 ## ☕️ Support
+
 Do you find CustomJS useful? Consider buying me a coffee to fuel updates and more useful software like this. Thank you!
 
 <a href="https://www.buymeacoffee.com/samlewis" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
