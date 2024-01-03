@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "rollup --config rollup.config.js -w",
     "build": "rollup --config rollup.config.js --environment BUILD:production",
-    "lint": "eslint . --ext .ts",
-    "lint-fix": "eslint .  --fix  --ext .ts",
+    "lint": "eslint --ext .ts .",
+    "lint-fix": "eslint  '--fix  --ext .ts .'",
     "format": "prettier --write ."
   },
   "keywords": [],
@@ -17,7 +17,7 @@
     "@rollup/plugin-commonjs": "^18.0.0",
     "@rollup/plugin-node-resolve": "^11.2.1",
     "@rollup/plugin-typescript": "^8.2.1",
-    "@types/node": "^14.14.37",
+    "@types/node": "^18.14.37",
     "@typescript-eslint/eslint-plugin": "^6.17.0",
     "@typescript-eslint/parser": "^6.17.0",
     "eslint": "^8.56.0",

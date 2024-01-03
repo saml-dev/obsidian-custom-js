@@ -9,11 +9,12 @@
     "plugin:@typescript-eslint/recommended"
   ],
   "parserOptions": {
-    "project": "./tsconfig.json"
+    "project": "./tsconfig.json",
+    "sourceType": "module"
   },
   "rules": {
     "prettier/prettier": "error",
-    "@typescript-eslint/ban-ts-comment": "warn",
+    "@typescript-eslint/ban-ts-comment": "error",
     "@typescript-eslint/no-unused-vars": [
       "error",
       {
@@ -23,8 +24,7 @@
       }
     ],
     "@typescript-eslint/no-explicit-any": ["error"],
-    // allow prettier to use SmartTabs
-    "no-mixed-spaces-and-tabs": "off",
+    "array-callback-return": ["error"],
     "padding-line-between-statements": [
       "warn",
       {

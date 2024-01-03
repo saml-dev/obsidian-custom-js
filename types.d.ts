@@ -7,7 +7,7 @@ declare global {
     customJS?: {
       obsidian?: typeof obsidian;
       app?: obsidian.App;
-      state?: {};
+      state?: Record<string, unknown>;
       [scriptName: string]: unknown;
     };
   }
@@ -18,7 +18,7 @@ declare module 'obsidian' {
     plugins: {
       enabledPlugins: Set<string>;
       plugins: {
-        [id: string]: any;
+        [id: string]: unknown;
         dataview?: {
           api?: DataviewAPI;
           manifest: {
@@ -40,8 +40,8 @@ declare module 'obsidian' {
   interface MetadataCache {
     on(
       name: 'dataview:api-ready',
-      callback: (api: DataviewAPI) => any,
-      ctx?: any,
+      callback: (api: DataviewAPI) => unknown,
+      ctx?: unknown,
     ): EventRef;
     on(
       name: 'dataview:metadata-change',
@@ -50,8 +50,8 @@ declare module 'obsidian' {
           | [op: 'rename', file: TAbstractFile, oldPath: string]
           | [op: 'delete', file: TFile]
           | [op: 'update', file: TFile]
-      ) => any,
-      ctx?: any,
+      ) => unknown,
+      ctx?: unknown,
     ): EventRef;
   }
 }
