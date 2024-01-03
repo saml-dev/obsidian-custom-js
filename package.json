@@ -5,7 +5,10 @@
   "main": "main.js",
   "scripts": {
     "dev": "rollup --config rollup.config.js -w",
-    "build": "rollup --config rollup.config.js --environment BUILD:production"
+    "build": "rollup --config rollup.config.js --environment BUILD:production",
+    "lint": "eslint . --ext .ts --ext .svelte",
+    "lint-fix": "eslint .  --fix  --ext .ts --ext .svelte",
+    "format": "prettier --write ."
   },
   "keywords": [],
   "author": "Sam Lewis",
@@ -20,7 +23,10 @@
     "rollup": "^2.32.1",
     "rollup-plugin-copy": "^3.4.0",
     "tslib": "^2.2.0",
-    "typescript": "^4.2.4"
+    "typescript": "^4.2.4",
+    "prettier": "^3.1.1",
+    "eslint": "^8.56.0",
+    "eslint-plugin-prettier": "^5.1.2"
   },
   "dependencies": {
     "compare-versions": "^3.6.0",
