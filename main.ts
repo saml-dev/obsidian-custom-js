@@ -1,4 +1,13 @@
-import { App, Plugin, PluginSettingTab, Setting, TAbstractFile, FuzzySuggestModal, FuzzyMatch, Notice } from 'obsidian';
+import {
+  App,
+  Plugin,
+  PluginSettingTab,
+  Setting,
+  TAbstractFile,
+  FuzzySuggestModal,
+  FuzzyMatch,
+  Notice,
+} from 'obsidian';
 import * as obsidian from 'obsidian';
 import compareVersions from 'compare-versions';
 import debuggableEval from 'debuggable-eval';
@@ -14,8 +23,8 @@ const DEFAULT_SETTINGS: CustomJSSettings = {
   jsFiles: '',
   jsFolder: '',
   startupScriptNames: [],
-  registeredInvocableScriptNames: []
-}
+  registeredInvocableScriptNames: [],
+};
 
 interface Invocable {
   invoke: () => Promise<void>;
@@ -31,7 +40,7 @@ export default class CustomJS extends Plugin {
   async onload() {
     console.log('Loading CustomJS');
     await this.loadSettings();
-    this.registerEvent(this.app.vault.on('modify', this.reloadIfNeeded, this))
+    this.registerEvent(this.app.vault.on('modify', this.reloadIfNeeded, this));
     window.forceLoadCustomJS = async () => {
       await this.loadClasses();
     };
@@ -86,7 +95,9 @@ export default class CustomJS extends Plugin {
       await scriptObj.invoke();
     } catch (e) {
       const message = `Script '${scriptName}' failed`;
-      new Notice(`${message}\n${e.message}\nSee error console for more details`);
+      new Notice(
+        `${message}\n${e.message}\nSee error console for more details`,
+      );
       console.error(message);
       console.error(e);
     }
@@ -127,8 +138,8 @@ export default class CustomJS extends Plugin {
       // Provide a way to create a new instance
       window.customJS[`create${def.name}Instance`] = () => new def();
     } catch (e) {
-      console.error(`CustomJS couldn\'t import ${f}`)
-      console.error(e)
+      console.error(`CustomJS couldn\'t import ${f}`);
+      console.error(e);
     }
   }
 
@@ -136,16 +147,19 @@ export default class CustomJS extends Plugin {
     window.customJS = {
       obsidian,
       state: window.customJS?.state ?? {},
-      app: this.app
+      app: this.app,
     };
     const filesToLoad = [];
 
     // Get individual paths
     if (this.settings.jsFiles != '') {
-      const individualFiles = this.settings.jsFiles.split(',').map(s => s.trim()).sort();
+      const individualFiles = this.settings.jsFiles
+        .split(',')
+        .map((s) => s.trim())
+        .sort();
       for (const f of individualFiles) {
         if (f != '' && f.endsWith('.js')) {
-          filesToLoad.push(f)
+          filesToLoad.push(f);
         }
       }
     }
@@ -154,7 +168,9 @@ export default class CustomJS extends Plugin {
     if (this.settings.jsFolder != '') {
       const prefix = this.settings.jsFolder;
       const files = this.app.vault.getFiles();
-      const scripts = files.filter(f => f.path.startsWith(prefix) && f.path.endsWith('.js'));
+      const scripts = files.filter(
+        (f) => f.path.startsWith(prefix) && f.path.endsWith('.js'),
+      );
 
       for (const s of scripts) {
         if (s.path != '' && s.path.endsWith('.js')) {
@@ -173,10 +189,10 @@ export default class CustomJS extends Plugin {
 
   sortByFileName(files: string[]) {
     files.sort((a, b) => {
-      const nameA = a.split('/').last()
-      const nameB = b.split('/').last()
+      const nameA = a.split('/').last();
+      const nameB = b.split('/').last();
       return nameA.localeCompare(nameB);
-    })
+    });
   }
 
   private getInvocableScriptCommandId(scriptName: string) {
@@ -188,7 +204,7 @@ export default class CustomJS extends Plugin {
       id: this.getInvocableScriptCommandId(scriptName),
       name: scriptName,
       callback: async () => {
-        await this.invokeScript(scriptName)
+        await this.invokeScript(scriptName);
       },
     });
 
@@ -199,8 +215,11 @@ export default class CustomJS extends Plugin {
   }
 
   async unregisterInvocableScript(scriptName: string) {
-    this.app.commands.removeCommand(`${this.manifest.id}:${this.getInvocableScriptCommandId(scriptName)}`)
-    const index = this.settings.registeredInvocableScriptNames.indexOf(scriptName);
+    this.app.commands.removeCommand(
+      `${this.manifest.id}:${this.getInvocableScriptCommandId(scriptName)}`,
+    );
+    const index =
+      this.settings.registeredInvocableScriptNames.indexOf(scriptName);
     this.settings.registeredInvocableScriptNames.splice(index, 1);
     await this.saveSettings();
   }
@@ -234,78 +253,87 @@ class CustomJSSettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Individual files')
       .setDesc('Comma-separated list of files to load')
-      .addText(text => text
-        .setPlaceholder('jsfile1.js,jsfile2.js')
-        .setValue(this.plugin.settings.jsFiles)
-        .onChange(async (value) => {
-          this.plugin.settings.jsFiles = value;
-          await this.plugin.saveSettings();
-          await this.plugin.loadClasses();
-        })
+      .addText((text) =>
+        text
+          .setPlaceholder('jsfile1.js,jsfile2.js')
+          .setValue(this.plugin.settings.jsFiles)
+          .onChange(async (value) => {
+            this.plugin.settings.jsFiles = value;
+            await this.plugin.saveSettings();
+            await this.plugin.loadClasses();
+          }),
       );
 
     // folder
     new Setting(containerEl)
       .setName('Folder')
       .setDesc('Path to folder containing JS files to load')
-      .addText(text => text
-        .setPlaceholder('js/scripts')
-        .setValue(this.plugin.settings.jsFolder)
-        .onChange(async (value) => {
-          this.plugin.settings.jsFolder = value;
-          await this.plugin.saveSettings();
-          await this.plugin.loadClasses();
-        })
+      .addText((text) =>
+        text
+          .setPlaceholder('js/scripts')
+          .setValue(this.plugin.settings.jsFolder)
+          .onChange(async (value) => {
+            this.plugin.settings.jsFolder = value;
+            await this.plugin.saveSettings();
+            await this.plugin.loadClasses();
+          }),
       );
 
     let descriptionTemplate = document.createElement('template');
-    descriptionTemplate.innerHTML = 'Allows you to bind an <dfn title="the class with `async invoke()` method">invocable script</dfn> to a hotkey';
+    descriptionTemplate.innerHTML =
+      'Allows you to bind an <dfn title="the class with `async invoke()` method">invocable script</dfn> to a hotkey';
 
     new Setting(containerEl)
       .setName('Registered invocable scripts')
       .setDesc(descriptionTemplate.content);
 
-    for (const scriptName of this.plugin.settings.registeredInvocableScriptNames) {
+    for (const scriptName of this.plugin.settings
+      .registeredInvocableScriptNames) {
       new Setting(containerEl)
-        .addText(text => text
-          .setValue(scriptName)
-          .setDisabled(true)
+        .addText((text) => text.setValue(scriptName).setDisabled(true))
+        .addExtraButton((cb) =>
+          cb
+            .setIcon('any-key')
+            .setTooltip('Configure Hotkey')
+            .onClick(() => {
+              const hotkeysTab = this.app.setting.openTabById('hotkeys');
+              hotkeysTab.searchComponent.setValue(
+                `${this.plugin.manifest.name}: ${scriptName}`,
+              );
+              hotkeysTab.updateHotkeyVisibility();
+            }),
         )
-        .addExtraButton(cb => cb
-          .setIcon('any-key')
-          .setTooltip('Configure Hotkey')
-          .onClick(() => {
-            const hotkeysTab = this.app.setting.openTabById('hotkeys');
-            hotkeysTab.searchComponent.setValue(`${this.plugin.manifest.name}: ${scriptName}`);
-            hotkeysTab.updateHotkeyVisibility();
-          })
-        )
-        .addExtraButton(cb => cb
-          .setIcon('cross')
-          .setTooltip('Delete')
-          .onClick(async () => {
-            this.plugin.unregisterInvocableScript(scriptName);
-            this.display();
-          })
+        .addExtraButton((cb) =>
+          cb
+            .setIcon('cross')
+            .setTooltip('Delete')
+            .onClick(async () => {
+              this.plugin.unregisterInvocableScript(scriptName);
+              this.display();
+            }),
         );
     }
 
-    new Setting(this.containerEl)
-      .addButton(cb => cb
+    new Setting(this.containerEl).addButton((cb) =>
+      cb
         .setButtonText('Register invocable script')
         .setCta()
         .onClick(async () => {
-          const modal = new InvocableScriptSelectorModal(this.app, this.plugin.settings.registeredInvocableScriptNames);
+          const modal = new InvocableScriptSelectorModal(
+            this.app,
+            this.plugin.settings.registeredInvocableScriptNames,
+          );
           const scriptName = await modal.promise;
           if (scriptName) {
             this.plugin.registerInvocableScript(scriptName);
             this.display();
           }
-        })
-      );
+        }),
+    );
 
     descriptionTemplate = document.createElement('template');
-    descriptionTemplate.innerHTML = '<dfn title="the class with `async invoke()` method">Invocable scripts</dfn> executed when the plugin is loaded';
+    descriptionTemplate.innerHTML =
+      '<dfn title="the class with `async invoke()` method">Invocable scripts</dfn> executed when the plugin is loaded';
 
     new Setting(containerEl)
       .setName('Startup scripts')
@@ -313,33 +341,34 @@ class CustomJSSettingsTab extends PluginSettingTab {
 
     for (const scriptName of this.plugin.settings.startupScriptNames) {
       new Setting(containerEl)
-        .addText(text => text
-          .setValue(scriptName)
-          .setDisabled(true)
-        )
-        .addExtraButton(cb => cb
-          .setIcon('cross')
-          .setTooltip('Delete')
-          .onClick(async () => {
-            this.plugin.deleteStartupScript(scriptName);
-            this.display();
-          })
+        .addText((text) => text.setValue(scriptName).setDisabled(true))
+        .addExtraButton((cb) =>
+          cb
+            .setIcon('cross')
+            .setTooltip('Delete')
+            .onClick(async () => {
+              this.plugin.deleteStartupScript(scriptName);
+              this.display();
+            }),
         );
     }
 
-    new Setting(this.containerEl)
-      .addButton(cb => cb
+    new Setting(this.containerEl).addButton((cb) =>
+      cb
         .setButtonText('Add startup script')
         .setCta()
         .onClick(async () => {
-          const modal = new InvocableScriptSelectorModal(this.app, this.plugin.settings.startupScriptNames);
+          const modal = new InvocableScriptSelectorModal(
+            this.app,
+            this.plugin.settings.startupScriptNames,
+          );
           const scriptName = await modal.promise;
           if (scriptName) {
             this.plugin.addStartupScript(scriptName);
             this.display();
           }
-        })
-      );
+        }),
+    );
   }
 }
 
@@ -361,14 +390,16 @@ class InvocableScriptSelectorModal extends FuzzySuggestModal<string> {
   }
 
   getItems(): string[] {
-    const entries = (Object.entries(window.customJS) as [string, any][]).map(entry => ({
-      scriptName: entry[0],
-      scriptObj: entry[1]
-    }));
+    const entries = (Object.entries(window.customJS) as [string, any][]).map(
+      (entry) => ({
+        scriptName: entry[0],
+        scriptObj: entry[1],
+      }),
+    );
     const invocableScriptNames = entries
-      .filter(entry => isInvocable(entry.scriptObj))
-      .map(entry => entry.scriptName)
-      .filter(scriptName => !this.excludedScriptNames.has(scriptName))
+      .filter((entry) => isInvocable(entry.scriptObj))
+      .map((entry) => entry.scriptName)
+      .filter((scriptName) => !this.excludedScriptNames.has(scriptName))
       .sort();
     return invocableScriptNames;
   }
@@ -377,7 +408,10 @@ class InvocableScriptSelectorModal extends FuzzySuggestModal<string> {
     return item;
   }
 
-  selectSuggestion(value: FuzzyMatch<string>, evt: MouseEvent | KeyboardEvent): void {
+  selectSuggestion(
+    value: FuzzyMatch<string>,
+    evt: MouseEvent | KeyboardEvent,
+  ): void {
     this.isSelected = true;
     super.selectSuggestion(value, evt);
   }
