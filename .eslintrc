@@ -1,0 +1,50 @@
+{
+  "root": true,
+  "ignorePatterns": ["**.js", "**/node_modules/**"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "prettier"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "rules": {
+    "prettier/prettier": "error",
+    "@typescript-eslint/ban-ts-comment": "warn",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "@typescript-eslint/no-explicit-any": ["error"],
+    // allow prettier to use SmartTabs
+    "no-mixed-spaces-and-tabs": "off",
+    "padding-line-between-statements": [
+      "warn",
+      {
+        "blankLine": "always",
+        "prev": "*",
+        "next": [
+          "return",
+          "if",
+          "multiline-const",
+          "function",
+          "multiline-expression",
+          "multiline-let",
+          "block-like"
+        ]
+      },
+      {
+        "blankLine": "always",
+        "prev": ["function"],
+        "next": "*"
+      }
+    ]
+  }
+}
