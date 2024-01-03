@@ -30,8 +30,8 @@ interface Invocable {
   invoke: () => Promise<void>;
 }
 
-function isInvocable(x: any): x is Invocable {
-  return typeof x?.invoke === 'function';
+function isInvocable(x: unknown): x is Invocable {
+  return typeof (x as { invoke: 'function' })?.invoke === 'function';
 }
 
 export default class CustomJS extends Plugin {
@@ -41,9 +41,11 @@ export default class CustomJS extends Plugin {
     console.log('Loading CustomJS');
     await this.loadSettings();
     this.registerEvent(this.app.vault.on('modify', this.reloadIfNeeded, this));
+
     window.forceLoadCustomJS = async () => {
       await this.loadClasses();
     };
+
     this.app.workspace.onLayoutReady(async () => {
       await this.loadClasses();
 
@@ -83,11 +85,13 @@ export default class CustomJS extends Plugin {
 
     if (!scriptObj) {
       console.warn(`Script '${scriptName}' is not defined`);
+
       return;
     }
 
     if (!isInvocable(scriptObj)) {
       console.warn(`Script '${scriptName}' is not invocable`);
+
       return;
     }
 
@@ -95,6 +99,7 @@ export default class CustomJS extends Plugin {
       await scriptObj.invoke();
     } catch (e) {
       const message = `Script '${scriptName}' failed`;
+
       new Notice(
         `${message}\n${e.message}\nSee error console for more details`,
       );
@@ -110,6 +115,7 @@ export default class CustomJS extends Plugin {
       // reload dataviewjs blocks if installed & version >= 0.4.11
       if (this.app.plugins.enabledPlugins.has('dataview')) {
         const version = this.app.plugins.plugins?.dataview?.manifest.version;
+
         if (compareVersions(version, '0.4.11') < 0) return;
 
         this.app.plugins.plugins.dataview?.api?.index?.touch();
@@ -138,7 +144,7 @@ export default class CustomJS extends Plugin {
       // Provide a way to create a new instance
       window.customJS[`create${def.name}Instance`] = () => new def();
     } catch (e) {
-      console.error(`CustomJS couldn\'t import ${f}`);
+      console.error(`CustomJS couldn't import ${f}`);
       console.error(e);
     }
   }
@@ -157,6 +163,7 @@ export default class CustomJS extends Plugin {
         .split(',')
         .map((s) => s.trim())
         .sort();
+
       for (const f of individualFiles) {
         if (f != '' && f.endsWith('.js')) {
           filesToLoad.push(f);
@@ -168,6 +175,7 @@ export default class CustomJS extends Plugin {
     if (this.settings.jsFolder != '') {
       const prefix = this.settings.jsFolder;
       const files = this.app.vault.getFiles();
+
       const scripts = files.filter(
         (f) => f.path.startsWith(prefix) && f.path.endsWith('.js'),
       );
@@ -191,6 +199,7 @@ export default class CustomJS extends Plugin {
     files.sort((a, b) => {
       const nameA = a.split('/').last();
       const nameB = b.split('/').last();
+
       return nameA.localeCompare(nameB);
     });
   }
@@ -218,6 +227,7 @@ export default class CustomJS extends Plugin {
     this.app.commands.removeCommand(
       `${this.manifest.id}:${this.getInvocableScriptCommandId(scriptName)}`,
     );
+
     const index =
       this.settings.registeredInvocableScriptNames.indexOf(scriptName);
     this.settings.registeredInvocableScriptNames.splice(index, 1);
@@ -245,7 +255,7 @@ class CustomJSSettingsTab extends PluginSettingTab {
   }
 
   display(): void {
-    let { containerEl } = this;
+    const { containerEl } = this;
     containerEl.empty();
     containerEl.createEl('h2', { text: 'CustomJS' });
 
@@ -280,6 +290,7 @@ class CustomJSSettingsTab extends PluginSettingTab {
       );
 
     let descriptionTemplate = document.createElement('template');
+
     descriptionTemplate.innerHTML =
       'Allows you to bind an <dfn title="the class with `async invoke()` method">invocable script</dfn> to a hotkey';
 
@@ -297,6 +308,7 @@ class CustomJSSettingsTab extends PluginSettingTab {
             .setTooltip('Configure Hotkey')
             .onClick(() => {
               const hotkeysTab = this.app.setting.openTabById('hotkeys');
+
               hotkeysTab.searchComponent.setValue(
                 `${this.plugin.manifest.name}: ${scriptName}`,
               );
@@ -324,6 +336,7 @@ class CustomJSSettingsTab extends PluginSettingTab {
             this.plugin.settings.registeredInvocableScriptNames,
           );
           const scriptName = await modal.promise;
+
           if (scriptName) {
             this.plugin.registerInvocableScript(scriptName);
             this.display();
@@ -332,6 +345,7 @@ class CustomJSSettingsTab extends PluginSettingTab {
     );
 
     descriptionTemplate = document.createElement('template');
+
     descriptionTemplate.innerHTML =
       '<dfn title="the class with `async invoke()` method">Invocable scripts</dfn> executed when the plugin is loaded';
 
@@ -363,6 +377,7 @@ class CustomJSSettingsTab extends PluginSettingTab {
             this.plugin.settings.startupScriptNames,
           );
           const scriptName = await modal.promise;
+
           if (scriptName) {
             this.plugin.addStartupScript(scriptName);
             this.display();
@@ -390,17 +405,19 @@ class InvocableScriptSelectorModal extends FuzzySuggestModal<string> {
   }
 
   getItems(): string[] {
-    const entries = (Object.entries(window.customJS) as [string, any][]).map(
-      (entry) => ({
-        scriptName: entry[0],
-        scriptObj: entry[1],
-      }),
-    );
+    const entries = (
+      Object.entries(window.customJS) as [string, Record<string, unknown>][]
+    ).map(([scriptName, scriptObj]) => ({
+      scriptName,
+      scriptObj,
+    }));
+
     const invocableScriptNames = entries
       .filter((entry) => isInvocable(entry.scriptObj))
       .map((entry) => entry.scriptName)
       .filter((scriptName) => !this.excludedScriptNames.has(scriptName))
       .sort();
+
     return invocableScriptNames;
   }
 
@@ -416,7 +433,7 @@ class InvocableScriptSelectorModal extends FuzzySuggestModal<string> {
     super.selectSuggestion(value, evt);
   }
 
-  onChooseItem(item: string, evt: MouseEvent | KeyboardEvent): void {
+  onChooseItem(item: string, _evt: MouseEvent | KeyboardEvent): void {
     this.resolve(item);
   }
 
