@@ -24,6 +24,7 @@
       }
     ],
     "@typescript-eslint/no-explicit-any": ["error"],
+    "no-console": "error",
     "array-callback-return": ["error"],
     "padding-line-between-statements": [
       "warn",
