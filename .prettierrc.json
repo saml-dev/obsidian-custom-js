@@ -1,0 +1,13 @@
+{
+  "printWidth": 80,
+  "semi": true,
+  "singleQuote": true,
+  "bracketSpacing": true,
+  "useTabs": false,
+  "overrides": [
+    {
+      "files": [".prettierrc", ".eslintrc"],
+      "options": { "parser": "json" }
+    }
+  ]
+}

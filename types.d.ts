@@ -5,11 +5,11 @@ declare global {
   interface Window {
     forceLoadCustomJS?: () => Promise<void>;
     customJS?: {
-      obsidian?: typeof obsidian,
-      app?: obsidian.App,
-      state?: {}
-      [scriptName: string]: unknown
-    }
+      obsidian?: typeof obsidian;
+      app?: obsidian.App;
+      state?: Record<string, unknown>;
+      [scriptName: string]: unknown;
+    };
   }
 }
 
@@ -18,30 +18,30 @@ declare module 'obsidian' {
     plugins: {
       enabledPlugins: Set<string>;
       plugins: {
-        [id: string]: any;
+        [id: string]: unknown;
         dataview?: {
           api?: DataviewAPI;
           manifest: {
-            version: string
-          }
+            version: string;
+          };
         };
       };
-    },
+    };
     setting: {
       openTabById: (tabId: 'hotkeys') => {
-        searchComponent: SearchComponent,
-        updateHotkeyVisibility: () => void
-      }
-    },
+        searchComponent: SearchComponent;
+        updateHotkeyVisibility: () => void;
+      };
+    };
     commands: {
       removeCommand: (commandName: string) => void;
-    }
+    };
   }
   interface MetadataCache {
     on(
       name: 'dataview:api-ready',
-      callback: (api: DataviewAPI) => any,
-      ctx?: any
+      callback: (api: DataviewAPI) => unknown,
+      ctx?: unknown,
     ): EventRef;
     on(
       name: 'dataview:metadata-change',
@@ -50,8 +50,8 @@ declare module 'obsidian' {
           | [op: 'rename', file: TAbstractFile, oldPath: string]
           | [op: 'delete', file: TFile]
           | [op: 'update', file: TFile]
-      ) => any,
-      ctx?: any
+      ) => unknown,
+      ctx?: unknown,
     ): EventRef;
   }
 }
