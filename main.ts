@@ -25,7 +25,6 @@ const DEFAULT_SETTINGS: CustomJSSettings = {
   startupScriptNames: [],
   registeredInvocableScriptNames: [],
 };
-
 interface Invocable {
   invoke: () => Promise<void>;
 }
@@ -38,6 +37,7 @@ export default class CustomJS extends Plugin {
   settings: CustomJSSettings;
 
   async onload() {
+    // eslint-disable-next-line no-console
     console.log('Loading CustomJS');
     await this.loadSettings();
     this.registerEvent(this.app.vault.on('modify', this.reloadIfNeeded, this));
@@ -84,12 +84,14 @@ export default class CustomJS extends Plugin {
     const scriptObj = window.customJS[scriptName];
 
     if (!scriptObj) {
+      // eslint-disable-next-line no-console
       console.warn(`Script '${scriptName}' is not defined`);
 
       return;
     }
 
     if (!isInvocable(scriptObj)) {
+      // eslint-disable-next-line no-console
       console.warn(`Script '${scriptName}' is not invocable`);
 
       return;
@@ -103,7 +105,9 @@ export default class CustomJS extends Plugin {
       new Notice(
         `${message}\n${e.message}\nSee error console for more details`,
       );
+      // eslint-disable-next-line no-console
       console.error(message);
+      // eslint-disable-next-line no-console
       console.error(e);
     }
   }
@@ -144,7 +148,9 @@ export default class CustomJS extends Plugin {
       // Provide a way to create a new instance
       window.customJS[`create${def.name}Instance`] = () => new def();
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.error(`CustomJS couldn't import ${f}`);
+      // eslint-disable-next-line no-console
       console.error(e);
     }
   }
