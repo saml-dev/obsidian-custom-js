@@ -4,6 +4,7 @@
   "singleQuote": true,
   "bracketSpacing": true,
   "useTabs": false,
+  "endOfLine": "auto",
   "overrides": [
     {
       "files": [".prettierrc", ".eslintrc"],
