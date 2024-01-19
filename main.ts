@@ -26,7 +26,7 @@ const DEFAULT_SETTINGS: CustomJSSettings = {
   startupScriptNames: [],
   registeredInvocableScriptNames: [],
   rerunStartupScriptsOnFileChange: false,
-}
+};
 
 interface Invocable {
   invoke: () => Promise<void>;
@@ -38,7 +38,8 @@ function isInvocable(x: unknown): x is Invocable {
 
 export default class CustomJS extends Plugin {
   settings: CustomJSSettings;
-  deconstructorsOfLoadedFiles: { deconstructor: () => void, name: string }[] = [];
+  deconstructorsOfLoadedFiles: { deconstructor: () => void; name: string }[] =
+    [];
 
   async onload() {
     // eslint-disable-next-line no-console
@@ -118,22 +119,23 @@ export default class CustomJS extends Plugin {
 
   async deconstructLoadedFiles() {
     // Run deconstructor if exists
-      for (const deconstructor of this.deconstructorsOfLoadedFiles) {
-        try {
-          await deconstructor.deconstructor();
-        } catch (e) {
-          console.error(`${deconstructor.name} failed`);
-          console.error(e);
-        }
+    for (const deconstructor of this.deconstructorsOfLoadedFiles) {
+      try {
+        await deconstructor.deconstructor();
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error(`${deconstructor.name} failed`);
+        // eslint-disable-next-line no-console
+        console.error(e);
       }
+    }
 
-      // Clear the list
-      this.deconstructorsOfLoadedFiles = [];
+    // Clear the list
+    this.deconstructorsOfLoadedFiles = [];
   }
 
   async reloadIfNeeded(f: TAbstractFile) {
     if (f.path.endsWith('.js')) {
-
       // Run deconstructor if exists
       await this.deconstructLoadedFiles();
 
@@ -169,7 +171,10 @@ export default class CustomJS extends Plugin {
   async evalFile(f: string): Promise<void> {
     try {
       const file = await this.app.vault.adapter.read(f);
-      const def = debuggableEval(`(${file})`, f) as new () => { deconstructor?: () => void };
+
+      const def = debuggableEval(`(${file})`, f) as new () => {
+        deconstructor?: () => void;
+      };
 
       // Store the existing instance
       const cls = new def();
@@ -179,9 +184,10 @@ export default class CustomJS extends Plugin {
       if (typeof cls.deconstructor === 'function') {
         // Add the deconstructor to the list
         const deconstructor = cls.deconstructor.bind(cls);
+
         const deconstructorWrapper = {
           deconstructor: deconstructor,
-          name: `Deconstructor of ${cls.constructor.name}`
+          name: `Deconstructor of ${cls.constructor.name}`,
         };
         this.deconstructorsOfLoadedFiles.push(deconstructorWrapper);
       }
@@ -429,19 +435,21 @@ class CustomJSSettingsTab extends PluginSettingTab {
             this.plugin.addStartupScript(scriptName);
             this.display();
           }
-        })
-      );
+        }),
+    );
 
     new Setting(containerEl)
       .setName('Re-execute the start scripts when reloading')
-      .setDesc('Decides whether the startup scripts should be executed again after reloading the scripts')
-      .addToggle(toggle =>
+      .setDesc(
+        'Decides whether the startup scripts should be executed again after reloading the scripts',
+      )
+      .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.rerunStartupScriptsOnFileChange)
-          .onChange(async value => {
+          .onChange(async (value) => {
             this.plugin.settings.rerunStartupScriptsOnFileChange = value;
             await this.plugin.saveSettings();
-          })
+          }),
       );
   }
 }
