@@ -230,6 +230,71 @@ Also you can register individual commands via [settings](#registered-invocable-s
 
 `window.customJS` object is being overridden every time any `js` file is modified in the vault. If you need some data to be preserved during such modifications, store them in `window.customJS.state`.
 
+### `deconstructor` usage
+
+Since the `window.customJS` object is overwritten each time the `js` files are reloaded, the option of defining a `deconstructor` has been added.
+
+In your Javascript class, which you have CustomJS load, you can define a `deconstructor`, which is then called on every reload. This gives you the option of having cleanup work carried out.
+
+```js
+deconstructor() {
+  ...
+}
+```
+
+#### Example definition of a `deconstructor`
+
+For example, you can deregister events that you have previously registered:
+
+```js
+deconstructor() {
+  this.app.workspace.off('file-menu', this.eventHandler);
+}
+```
+
+### Re-execute the start scripts on reload
+
+There is also the option of having the start scripts re-executed each time the `js` files are reloaded. This can be activated in the settings and is deactivated by default.
+
+#### Complete example `deconstructor` & re-execute start scripts
+
+These two functions, the `deconstructor` and the automatic re-execution of the start scripts, make it possible, for example, to implement your own context menu in Obsidian.
+
+To do this, you must register the corresponding event in the `invoke` start function and deregister it again in the `deconstructor`.
+
+Please be aware of any binding issues and refer to the Obsidian API documentation.
+
+```js
+class AddCustomMenuEntry {
+  constructor() {
+    // Binding the event handler to the `this` context of the class.
+    this.eventHandler = this.eventHandler.bind(this);
+  }
+
+  invoke() {
+    this.app.workspace.on('file-menu', this.eventHandler);
+  }
+
+  deconstructor() {
+    this.app.workspace.off('file-menu', this.eventHandler);
+  }
+
+  eventHandler(menu, file) {
+    // Look in the API documentation for this feature
+    //  https://docs.obsidian.md/Plugins/User+interface/Context+menus
+    menu.addSeparator();
+    menu.addItem((item) => {
+      item
+        .setTitle('Custom menu entry text..')
+        .setIcon('file-plus-2') // Look in the API documentation for the available icons
+        .onClick(() => {        //  https://docs.obsidian.md/Plugins/User+interface/Icons
+          // Insert the code here that is to be executed when the context menu entry is clicked.
+        });
+    });
+  }
+}
+```
+
 ## ☕️ Support
 
 Do you find CustomJS useful? Consider buying me a coffee to fuel updates and more useful software like this. Thank you!
