@@ -1,7 +1,7 @@
 {
   "id": "customjs",
   "name": "CustomJS",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "minAppVersion": "0.9.12",
   "description": "This plugin allows for the loading and reuse of custom javascript files inside your vault.",
   "author": "Sam Lewis",
