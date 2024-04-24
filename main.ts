@@ -47,7 +47,7 @@ export default class CustomJS extends Plugin {
     console.log('Loading CustomJS');
     await this.loadSettings();
     this.registerEvent(this.app.vault.on('modify', this.reloadIfNeeded, this));
- 
+
     window.forceLoadCustomJS = async () => {
       await this.initCustomJS();
     };
