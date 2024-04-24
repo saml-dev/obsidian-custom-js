@@ -4,7 +4,7 @@ import { DataviewAPI } from 'obsidian-dataview';
 declare global {
   interface Window {
     forceLoadCustomJS?: () => Promise<void>;
-    cJS?: (requireModule?: string) => Promise<any>;
+    cJS?: (moduleOrCallback?: string|Function) => Promise<any>;
     customJS?: {
       obsidian?: typeof obsidian;
       app?: obsidian.App;

@@ -52,16 +52,20 @@ export default class CustomJS extends Plugin {
       await this.initCustomJS();
     };
 
-    window.cJS = async (requireModule?: string) => {
+    window.cJS = async (moduleOrCallback?: string|Function) => {
       if (!window.customJS?.state?._ready) {
         await this.initCustomJS();
       }
       
-      if (requireModule) {
-        return window.customJS[requireModule];
-      } else {
-        return window.customJS;
+      if (moduleOrCallback) {
+        if ('string' === typeof moduleOrCallback) {
+          return window.customJS[moduleOrCallback];
+        } else if ('function' === typeof moduleOrCallback) {
+          moduleOrCallback(window.customJS);
+        }
       }
+
+      return window.customJS;
     };
 
     this.app.workspace.onLayoutReady(async () => {
