@@ -54,13 +54,13 @@ class CoolString {
 
 // dataviewjs block in *.md
 ```dataviewjs
-const {CoolString} = customJS
+const {CoolString} = await cJS()
 dv.list(dv.pages().file.name.map(n => CoolString.coolify(n)))
 ```
 
 // templater template
 <%*
-const {CoolString} = customJS;
+const {CoolString} = await cJS();
 tR += CoolString.coolify(tp.file.title);
 %>
 ````
@@ -75,18 +75,18 @@ You can pass anything as parameters to your functions to allow for some incredib
 
 ````
 ```dataviewjs
-const {DvTasks} = customJS
+const {DvTasks} = await cJS()
 DvTasks.getOverdueTasks({app, dv, luxon, that:this, date:'2021-08-25'})
 ```
 
 ```dataviewjs
-const {DvTasks} = customJS
+const {DvTasks} = await cJS()
 DvTasks.getTasksNoDueDate({app, dv, luxon, that:this})
 ```
 
 ### Today's Tasks
 ```dataviewjs
-const {DvTasks} = customJS
+const {DvTasks} = await cJS()
 DvTasks.getTodayTasks({app, dv, luxon, that:this, date:'2021-08-25'})
 ```
 ### Daily Journal
@@ -204,10 +204,10 @@ CustomJS loads your modules at Obsidian's startup by hooking an event that says 
 
 > `customJS` is not defined
 
-If you see issues where the `customJS` variable is not defined, this is when you want to force it to load before your script continues. In order to allow this, we provide the asynchronous function `forceLoadCustomJS()`, also defined globally. This means that you can `await` it, thereby ensuring that `customJS` will be available when you need it.
+If you see issues where the `customJS` variable is not defined, this is when you want to force it to load before your script continues. In order to allow this, we provide the asynchronous function `cJS()`, also defined globally. This means that you can `await` it, thereby ensuring that `customJS` will be available when you need it.
 
 ```js
-await forceLoadCustomJS();
+await cJS();
 ```
 
 That said, most of the time **_you do not need to do this_**. In the vast majority of JavaScript execution taking place within Obsidian, customJS will be loaded.
