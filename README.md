@@ -258,13 +258,25 @@ customJS.MyModule.doSomething()
 ```
 ````
 
+Wait for the plugin to fully load:
+````
+```js-engine
+while (!customJS?.state?._ready) {
+  await new Promise(resolve => setTimeout(resolve, 50))
+}
+
+// Arriving here means, all customJS properties are ready to be used
+customJS.MyModule.doSomething()
+```
+````
+
 #### The `cJS()` function
 
 CustomJS provides several ways on how to use the `cJS()` function:
 
 1. `async cJS(): customJS` .. The default return value is the [global object](#global-object).
 2. `async cJS( moduleName: string ): object` .. Using a string parameter will return a single property of the global object.
-3. `async cJS( Function ): customJS` .. Using a callback function will pass the global object as only parameter to that function.
+3. `async cJS( async Function ): customJS` .. Using a callback function will pass the global object as only parameter to that function.
 
 **Samples**
 
@@ -291,6 +303,19 @@ await cJS( customJS => customJS.MyModule.doSomething(dv) )
 
 // Or
 await cJS( ({MyModule}) => MyModule.doSomething(dv) )
+```
+````
+
+Run a custom async-callback when the customJS object is ready:
+````
+```js-engine
+async function runAsync(customJS) {
+    await customJS.MyModule.doSomethingAsync(engine)
+}
+await cJS(runAsync)
+
+// Or, as one-liner:
+await cJS( async (customJS) => {await customJS.MyModule.doSomethingAsync(engine)} )
 ```
 ````
 
