@@ -61,7 +61,7 @@ export default class CustomJS extends Plugin {
         if ('string' === typeof moduleOrCallback) {
           return window.customJS[moduleOrCallback];
         } else if ('function' === typeof moduleOrCallback) {
-          moduleOrCallback(window.customJS);
+          await moduleOrCallback(window.customJS);
         }
       }
 
