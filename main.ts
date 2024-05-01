@@ -40,6 +40,7 @@ export default class CustomJS extends Plugin {
   settings: CustomJSSettings;
   deconstructorsOfLoadedFiles: { deconstructor: () => void; name: string }[] =
     [];
+  loaderPromise: Promise<void>|null = null;
 
   async onload() {
     // eslint-disable-next-line no-console
@@ -48,7 +49,23 @@ export default class CustomJS extends Plugin {
     this.registerEvent(this.app.vault.on('modify', this.reloadIfNeeded, this));
 
     window.forceLoadCustomJS = async () => {
-      await this.loadClasses();
+      await this.initCustomJS();
+    };
+
+    window.cJS = async (moduleOrCallback?: string|Function) => {
+      if (!window.customJS?.state?._ready) {
+        await this.initCustomJS();
+      }
+      
+      if (moduleOrCallback) {
+        if ('string' === typeof moduleOrCallback) {
+          return window.customJS[moduleOrCallback];
+        } else if ('function' === typeof moduleOrCallback) {
+          await moduleOrCallback(window.customJS);
+        }
+      }
+
+      return window.customJS;
     };
 
     this.app.workspace.onLayoutReady(async () => {
@@ -139,7 +156,7 @@ export default class CustomJS extends Plugin {
       // Run deconstructor if exists
       await this.deconstructLoadedFiles();
 
-      await this.loadClasses();
+      await this.initCustomJS();
 
       // invoke startup scripts again if wanted
       if (this.settings.rerunStartupScriptsOnFileChange) {
@@ -202,6 +219,16 @@ export default class CustomJS extends Plugin {
     }
   }
 
+  async initCustomJS() {
+    if (!this.loaderPromise) {
+      this.loaderPromise = this.loadClasses().finally(() => {
+        this.loaderPromise = null;
+      });
+    }
+    
+    await this.loaderPromise;
+  }
+
   async loadClasses() {
     window.customJS = {
       obsidian,
@@ -209,6 +236,7 @@ export default class CustomJS extends Plugin {
       app: this.app,
     };
     const filesToLoad = [];
+    window.customJS.state._ready = false;
 
     // Get individual paths
     if (this.settings.jsFiles != '') {
@@ -246,6 +274,7 @@ export default class CustomJS extends Plugin {
     for (const f of filesToLoad) {
       await this.evalFile(f);
     }
+    window.customJS.state._ready = true;
   }
 
   sortByFileName(files: string[]) {

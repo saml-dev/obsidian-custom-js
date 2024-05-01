@@ -43,6 +43,20 @@ Allows you to bind an [Invocable Script](#invocable-scripts) to a hotkey.
 
 CustomJS works by writing javascript classes. Each file can only contain one class.
 
+### Accessing your classes
+
+**Global Object: `customJS`**
+During startup, an instance of the custom classes is made available in the global `window.customJS` object.
+
+Generally, the global object can be safely used in any kind of template, as those are invoked by user action after Obsidian loaded.
+
+**Async Function: `await cJS()`**
+Since the global object is initialized [asynchronously](#asynchronous-usage), you might need to use the loader function `cJS()` to ensure all classes are fully loaded before accessing your custom functions.
+
+The async function is the official way of accessing your custom classes and should be used in code blocks of your notes. This ensures, that notes that are automatically opened when Obsidian starts up, do not throw an JS error
+
+### Sample
+
 ````
 // in vault at scripts/coolString.js
 class CoolString {
@@ -54,13 +68,13 @@ class CoolString {
 
 // dataviewjs block in *.md
 ```dataviewjs
-const {CoolString} = customJS
+const {CoolString} = await cJS()
 dv.list(dv.pages().file.name.map(n => CoolString.coolify(n)))
 ```
 
 // templater template
 <%*
-const {CoolString} = customJS;
+const {CoolString} = await cJS();
 tR += CoolString.coolify(tp.file.title);
 %>
 ````
@@ -75,18 +89,18 @@ You can pass anything as parameters to your functions to allow for some incredib
 
 ````
 ```dataviewjs
-const {DvTasks} = customJS
+const {DvTasks} = await cJS()
 DvTasks.getOverdueTasks({app, dv, luxon, that:this, date:'2021-08-25'})
 ```
 
 ```dataviewjs
-const {DvTasks} = customJS
+const {DvTasks} = await cJS()
 DvTasks.getTasksNoDueDate({app, dv, luxon, that:this})
 ```
 
 ### Today's Tasks
 ```dataviewjs
-const {DvTasks} = customJS
+const {DvTasks} = await cJS()
 DvTasks.getTodayTasks({app, dv, luxon, that:this, date:'2021-08-25'})
 ```
 ### Daily Journal
@@ -198,19 +212,114 @@ class DvTasks {
 
 ![Result](images/dvTasksExample.png)
 
+---
+
+## Advanced Docs
+
+### Global object
+
+The `window.customJS` object holds instances to all your custom JS classes, as well as some special properties:
+
+- `customJS.state: object` .. The customJS [state](#state) object
+- `customJS.obsidian: Module` .. Internal [Obsidian API](https://github.com/obsidianmd/obsidian-api/blob/master/obsidian.d.ts) functions
+- `customJS.app: App` .. Obsidian's [`class App`](https://github.com/obsidianmd/obsidian-api/blob/master/obsidian.d.ts) instance (same as `window.app`)
+
+Every custom class you add creates two new properties:
+- `customJS.MyModule: object` .. holds an instance to the `class MyModule {}` class
+- `customJS.createMyModuleInstance: Function` .. A method that returns a _new_ instance to `MyModule`. Note that you cannot pass any argument to the constructor
+
 ### Asynchronous Usage
 
-CustomJS loads your modules at Obsidian's startup by hooking an event that says that Obsidian is ready. This is an event that is used by _other_ plugins as well (such as [Templater](https://github.com/SilentVoid13/Templater) and its startup template), and unfortunately this means that if you want to use CustomJS with them there can be problems.
+CustomJS loads your modules at Obsidian's startup by hooking an event that says that Obsidian is ready. This is an event that is used by _other_ plugins as well (such as [Templater](https://github.com/SilentVoid13/Templater) and its startup template, or [JS Engine](https://github.com/mProjectsCode/obsidian-js-engine-plugin)), and unfortunately this means that if you want to use CustomJS with them there can be problems.
 
 > `customJS` is not defined
 
-If you see issues where the `customJS` variable is not defined, this is when you want to force it to load before your script continues. In order to allow this, we provide the asynchronous function `forceLoadCustomJS()`, also defined globally. This means that you can `await` it, thereby ensuring that `customJS` will be available when you need it.
+If you see issues where the `customJS` variable is not defined, this is when you want to force it to load before your script continues. In order to allow this, we provide the asynchronous function `cJS()`, also defined globally. This means that you can `await` it, thereby ensuring that `customJS` will be available when you need it.
 
 ```js
-await forceLoadCustomJS();
+await cJS()
 ```
 
 That said, most of the time **_you do not need to do this_**. In the vast majority of JavaScript execution taking place within Obsidian, customJS will be loaded.
+
+#### Check loading state
+
+You can check the special [state](#state) value of `customJS.state._ready` to determine, if your custom JS code is fully loaded and can be used:
+
+````
+```dataviewjs
+if (!customJS?.state?._ready) {
+  // CustomJS is not fully loaded. Abort the script and do not output anything 
+  return
+}
+
+// Arriving here means, all customJS properties are ready to be used
+customJS.MyModule.doSomething()
+```
+````
+
+Wait for the plugin to fully load:
+````
+```js-engine
+while (!customJS?.state?._ready) {
+  await new Promise(resolve => setTimeout(resolve, 50))
+}
+
+// Arriving here means, all customJS properties are ready to be used
+customJS.MyModule.doSomething()
+```
+````
+
+#### The `cJS()` function
+
+CustomJS provides several ways on how to use the `cJS()` function:
+
+1. `async cJS(): customJS` .. The default return value is the [global object](#global-object).
+2. `async cJS( moduleName: string ): object` .. Using a string parameter will return a single property of the global object.
+3. `async cJS( async Function ): customJS` .. Using a callback function will pass the global object as only parameter to that function.
+
+**Samples**
+
+Access the fully initialized customJS object
+````
+```dataviewjs
+const modules = await cJS()
+modules.MyModule.doSomething()
+```
+````
+
+Access a single module from the customJS object
+````
+```dataviewjs
+const MyModule = await cJS('MyModule')
+MyModule.doSomething()
+```
+````
+
+Run custom code via callback:
+````
+```dataviewjs
+await cJS( customJS => customJS.MyModule.doSomething(dv) )
+
+// Or
+await cJS( ({MyModule}) => MyModule.doSomething(dv) )
+```
+````
+
+Run a custom async-callback when the customJS object is ready:
+````
+```js-engine
+async function runAsync(customJS) {
+    await customJS.MyModule.doSomethingAsync(engine)
+}
+await cJS(runAsync)
+
+// Or, as one-liner:
+await cJS( async (customJS) => {await customJS.MyModule.doSomethingAsync(engine)} )
+```
+````
+
+Note: It's recommended to always use the `await` keyword when calling `cJS()`, even in the last sample (using the callback).
 
 ### Invocable Scripts
 
@@ -271,7 +380,7 @@ class AddCustomMenuEntry {
     this.eventHandler = this.eventHandler.bind(this);
   }
 
-  invoke() {
+  async invoke() {
     this.app.workspace.on('file-menu', this.eventHandler);
   }
 
