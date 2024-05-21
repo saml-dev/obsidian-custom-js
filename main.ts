@@ -41,7 +41,7 @@ export default class CustomJS extends Plugin {
   settings: CustomJSSettings;
   deconstructorsOfLoadedFiles: { deconstructor: () => void; name: string }[] =
     [];
-  loaderPromise: Promise<void>|null = null;
+  loaderPromise: Promise<void> | null = null;
 
   async onload() {
     // eslint-disable-next-line no-console
@@ -59,7 +59,7 @@ export default class CustomJS extends Plugin {
       if (!window.customJS?.state?._ready) {
         await this.initCustomJS();
       }
-      
+
       if (moduleOrCallback) {
         if ('string' === typeof moduleOrCallback) {
           return window.customJS[moduleOrCallback];
@@ -229,7 +229,7 @@ export default class CustomJS extends Plugin {
         this.loaderPromise = null;
       });
     }
-    
+
     await this.loaderPromise;
   }
 
