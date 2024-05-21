@@ -88,7 +88,8 @@ export default class CustomJS extends Plugin {
     }
   }
 
-  onunload() {
+  async onunload() {
+    await this.deconstructLoadedFiles();
     delete window.customJS;
   }
 
