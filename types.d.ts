@@ -1,16 +1,20 @@
 import * as obsidian from 'obsidian';
 import { DataviewAPI } from 'obsidian-dataview';
 
+export type CustomJSType = {
+  obsidian?: typeof obsidian;
+  app?: obsidian.App;
+  state?: Record<string, unknown>;
+  [scriptName: string]: unknown;
+};
+
 declare global {
   interface Window {
     forceLoadCustomJS?: () => Promise<void>;
-    cJS?: (moduleOrCallback?: string|Function) => Promise<any>;
-    customJS?: {
-      obsidian?: typeof obsidian;
-      app?: obsidian.App;
-      state?: Record<string, unknown>;
-      [scriptName: string]: unknown;
-    };
+    cJS?: (
+      moduleOrCallback?: string | ((customJS: CustomJSType) => void),
+    ) => Promise<unknown>;
+    customJS?: CustomJSType;
   }
 }
 
