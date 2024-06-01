@@ -81,6 +81,8 @@ tR += CoolString.coolify(tp.file.title);
 
 Make sure you add `scripts/coolString.js` to the settings page for CustomJS and voila! When entering preview mode for the dataviewjs block you should see a list of all your files with a little extra 😎 — inserting the templater template will output a similar result with just the current file name.
 
+> ⚠️ CustomJS will initialize any class as a singleton instance. If you want to create an isolated instance use `create${className}Instance` instead, such as `createCoolStringInstance` for the above class.
+
 ## Advanced example
 
 You can pass anything as parameters to your functions to allow for some incredible code reuse. A dataview example that I use to manage tasks:
