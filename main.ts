@@ -11,6 +11,7 @@ import {
 import * as obsidian from 'obsidian';
 import compareVersions from 'compare-versions';
 import debuggableEval from 'debuggable-eval';
+import { CustomJSType } from './types';
 
 interface CustomJSSettings {
   jsFiles: string;
@@ -40,7 +41,7 @@ export default class CustomJS extends Plugin {
   settings: CustomJSSettings;
   deconstructorsOfLoadedFiles: { deconstructor: () => void; name: string }[] =
     [];
-  loaderPromise: Promise<void>|null = null;
+  loaderPromise: Promise<void> | null = null;
 
   async onload() {
     // eslint-disable-next-line no-console
@@ -52,11 +53,13 @@ export default class CustomJS extends Plugin {
       await this.initCustomJS();
     };
 
-    window.cJS = async (moduleOrCallback?: string|Function) => {
+    window.cJS = async (
+      moduleOrCallback?: string | ((customJS: CustomJSType) => void),
+    ) => {
       if (!window.customJS?.state?._ready) {
         await this.initCustomJS();
       }
-      
+
       if (moduleOrCallback) {
         if ('string' === typeof moduleOrCallback) {
           return window.customJS[moduleOrCallback];
@@ -88,7 +91,8 @@ export default class CustomJS extends Plugin {
     }
   }
 
-  onunload() {
+  async onunload() {
+    await this.deconstructLoadedFiles();
     delete window.customJS;
   }
 
@@ -225,7 +229,7 @@ export default class CustomJS extends Plugin {
         this.loaderPromise = null;
       });
     }
-    
+
     await this.loaderPromise;
   }
 
