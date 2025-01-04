@@ -41,7 +41,7 @@ Allows you to bind an [Invocable Script](#invocable-scripts) to a hotkey.
 
 ## Usage/Example
 
-CustomJS works by writing javascript classes. Each file can only contain one class.
+CustomJS works by writing javascript classes. Each file can contain one class _and only one class_. Imports, constants, etc defined outside the class will break CustomJS.
 
 ### Accessing your classes
 
