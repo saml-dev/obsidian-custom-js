@@ -41,7 +41,18 @@ Allows you to bind an [Invocable Script](#invocable-scripts) to a hotkey.
 
 ## Usage/Example
 
-CustomJS works by writing javascript classes. Each file can contain one class _and only one class_. Imports, constants, etc defined outside the class will break CustomJS.
+**Important:** CustomJS **only** works with JavaScript classes. Each file must contain exactly one class - no more, no less. Any other code structure will not work.
+
+❌ **This will NOT work:**
+- `module.exports = Highlights;`
+- Bare functions like `function myFunction() {}`
+- Variable exports like `export const myVar = "value";`
+- Any code outside of a class definition
+
+✅ **Only this works:**
+- A single class definition per file, like `class MyClass { ... }`
+
+Imports, constants, and any other code defined outside the class will break CustomJS. Everything must be contained within the class definition.
 
 ### Accessing your classes
 
